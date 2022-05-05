@@ -20,6 +20,23 @@ USE_SSH = False
 DATA_DIR = "./data/"
 
 # %%
+### define functions for logging runtimes
+def write_file(filename,data):
+    if os.path.isfile(filename):
+        with open(filename, 'a') as f:
+            f.write('\n' + data)
+    else:
+        with open(filename, 'w') as f:
+            f.write(data)
+
+# %%
+def print_time():
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d %H:%M")
+    data = current_time
+    return data
+
+# %%
 ### EXPORT existing records from R4/source REDCap
 data = {
     'token': cfg.config['R4_api_token'],
@@ -187,6 +204,7 @@ print('HTTP Status: ' + str(r.status_code))
 ## Check the count of records updated since last run. If nothing to be updated, quit the script.
 record_count = r.json()['count']
 if (record_count < 1):
+    write_file('run_history.log', print_time())
     quit()
 
 # %%
@@ -384,22 +402,6 @@ print('HTTP Status: ' + str(r.status_code))
 
 # %%
 ### Update date file with latest run time
-def write_file(filename,data):
-    if os.path.isfile(filename):
-        with open(filename, 'a') as f:          
-            f.write('\n' + data)   
-    else:
-        with open(filename, 'w') as f:                   
-            f.write(data)
-
-# %%
-def print_time():   
-    now = datetime.now()
-    current_time = now.strftime("%Y-%m-%d %H:%M")
-    data = current_time
-    return data
-
-# %%
 write_file('run_history.log' , print_time())
 
 # %%
