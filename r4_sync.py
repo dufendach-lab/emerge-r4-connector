@@ -36,6 +36,33 @@ def print_time():
     data = current_time
     return data
 
+# # %%
+# ### local Data dictionary export
+# data = {
+#     'token': ['R4copy_api_token'],
+#     'content': 'metadata',
+#     'format': 'json',
+#     'returnFormat': 'json'
+# }
+# r = requests.post(cfg.config['R4copy_api_url'],data=data)
+# meta_local_json = r.json()
+# print('HTTP Status: ' + str(r.status_code))
+#
+# ### R4 Data dictionary export
+# data = {
+#     'token': ['R4_api_token'],
+#     'content': 'metadata',
+#     'format': 'json',
+#     'returnFormat': 'json'
+# }
+# r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH)
+# meta_r4_json = r.json()
+# print('HTTP Status: ' + str(r.status_code))
+#
+# # remove field already existing.
+# meta_local_json_field_name_list = [i['field_name'] for i in meta_local_json]
+# meta_r4_json_deduplicated = [i for i in meta_r4_json if i['field_name'] not in meta_local_json_field_name_list]
+
 # %%
 ### EXPORT existing records from R4/source REDCap
 data = {
@@ -97,7 +124,6 @@ R4copy_exportIDs_string = r.content.decode("utf-8")
 R4copy_exportIDs_dict = json.loads(R4copy_exportIDs_string)
 R4copy_exportIDs_df = pandas.DataFrame(R4copy_exportIDs_dict)
 R4copy_exportIDs = R4copy_exportIDs_df['record_id'].tolist()
-# R4copy_exportIDs = pandas.DataFrame(R4copy_exportIDs, columns=['record_id'])
 
 # %%
 ### calculate differences in IDs between projects
@@ -136,11 +162,6 @@ if num_delete > 0:
     }
     r = requests.post(cfg.config['R4copy_api_url'], data=fields)
     print('HTTP Status: ' + str(r.status_code))
-
-# %%
-r = requests.post(cfg.config['R4copy_api_url'],data=data, verify=USE_SSH)
-print('HTTP Status: ' + str(r.status_code))
-
 # %%
 ### Get last run time from date file
 last_run_file = Path('./run_history.log')
@@ -157,7 +178,6 @@ else:
 print("last runtime:", last_runtime)
 
 # %%
-### EXPORT data from R4/source REDCap
 data = {
     'token': cfg.config['R4_api_token'],
     'content': 'record',
@@ -205,18 +225,18 @@ r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 # %%
-## Check the count of records updated since last run. If nothing to be updated, quit the script.
-record_count = r.json()['count']
+### Check the record count. If nothing to be updated, quit the script.
+
+record_count = len(r.json())
 if (record_count < 1):
     write_file('run_history.log', print_time())
     quit()
 
 # %%
-### Save data from request in a data frame
+### Save the content of the request in a data frame.
 R4_fullexport_string = r.content.decode("utf-8")
 R4_fullexport_dict = json.loads(R4_fullexport_string)
 R4_fullexport_df = pandas.DataFrame(R4_fullexport_dict)
-
 
 # %%
 ### create list of file fields that need to be exported + copied over
@@ -224,13 +244,12 @@ file_field_list = ['record_id','pdf_file','broad_import_pdf',
                    'completed_signed_consent']
 
 # %%
-### filter original export from above by the file fields
-files_export_df = export_df[file_field_list]
+### filter export dataframe by the file fields
+files_export_df = R4_fullexport_df[file_field_list]
 
 # %%
 ### melt file dataframe so record, field, and filename are columns
 files_eav = pandas.melt(files_export_df, id_vars=['record_id'], var_name='field', value_name='file_name')
-
 
 # %%
 ### remove rows that don't have a filename (no file uploaded in R4)
@@ -267,8 +286,7 @@ for ind in consent_files_list:
         f.write(r.content)
         f.close()
 
-# %% [markdown]
-# ## Convert files to HIM-compatible format
+# ## Convert consent files to HIM-compatible format
 
 # %%
 ### create dataframe of fields for consent files for HIM
@@ -284,7 +302,7 @@ him_filename_df = him_filename_df.astype({"age": int})
 him_consent_join = pandas.merge(him_filename_df, consent_files, on='record_id')
 
 # %%
-### remove whitespace from participant name
+### remove whitespace and special characters from participant names
 him_consent_join['name_of_participant_part1'] = him_consent_join['name_of_participant_part1'].str.replace('\W', '')
 
 # %%
@@ -321,7 +339,7 @@ for ind in him_consent_list:
     him_newnames_list.append(newname)
 
 him_newnames_df = pandas.DataFrame({'newname': him_newnames_list})
-him_consent_join = him_consent_join.join(him_newnames_df)          
+him_consent_join = him_consent_join.join(him_newnames_df)
 him_consent_list = him_consent_join.values.tolist()
 
 # %%
@@ -377,7 +395,7 @@ for ind in nonconsent_files_list:
         'returnFormat': 'json'
         }
     with open((DATA_DIR + str(filename)), 'rb') as f:
-        r=requests.post(cfg.config['R4copy_api_url'], data=data, files={'file':f})
+        r=requests.post(cfg.config['R4copy_api_url'], data=data, files={'file':f}, verify=USE_SSH)
         f.close()
         print('HTTP Status: ' + str(r.status_code))
 
@@ -386,8 +404,7 @@ for ind in nonconsent_files_list:
 for pdf in os.listdir(DATA_DIR):
     os.remove(os.path.join(DATA_DIR, pdf))
 
-# %%
-### IMPORT data into local REDCap
+### IMPORT field data into local REDCap
 fields = {
     'token': cfg.config['R4copy_api_token'],
     'content': 'record',
@@ -401,14 +418,9 @@ fields = {
     'returnContent': 'count',
     'returnFormat': 'json'
 }
-r = requests.post(cfg.config['R4copy_api_url'],data=fields)
+r = requests.post(cfg.config['R4copy_api_url'],data=fields, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 # %%
 ### Update date file with latest run time
 write_file('run_history.log' , print_time())
-
-# %%
-
-
-
