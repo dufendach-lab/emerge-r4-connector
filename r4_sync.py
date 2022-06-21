@@ -88,6 +88,10 @@ data = {
 }
 
 # %%
+r = requests.post(cfg.config['R4copy_api_url'],data=data, verify=USE_SSH)
+print('HTTP Status: ' + str(r.status_code))
+
+# %%
 ### store data from request
 R4copy_exportIDs_string = r.content.decode("utf-8")
 R4copy_exportIDs_dict = json.loads(R4copy_exportIDs_string)
