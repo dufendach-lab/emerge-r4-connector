@@ -262,8 +262,6 @@ for ind in consent_files_list:
         f.write(r.content)
         f.close()
         
-# ## Convert files to HIM-compatible format
-=======
 # ## Convert consent files to HIM-compatible format
 
 # %%
