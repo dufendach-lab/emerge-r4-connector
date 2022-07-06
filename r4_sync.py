@@ -162,10 +162,7 @@ if num_delete > 0:
     }
     r = requests.post(cfg.config['R4copy_api_url'], data=fields)
     print('HTTP Status: ' + str(r.status_code))
-<<<<<<< HEAD
 
-=======
->>>>>>> 4a5ebca9da7b5dc76fee0fb4a3f95f94ae0e85bb
 # %%
 ### Get last run time from date file
 last_run_file = Path('./run_history.log')
@@ -231,12 +228,8 @@ r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 # %%
-<<<<<<< HEAD
-## Check the count of records updated since last run. If nothing to be updated, quit the script.
-=======
-### Check the record count. If nothing to be updated, quit the script.
 
->>>>>>> 4a5ebca9da7b5dc76fee0fb4a3f95f94ae0e85bb
+## Check the count of records updated since last run. If nothing to be updated, quit the script.
 record_count = len(r.json())
 if (record_count < 1):
     write_file('run_history.log', print_time())
@@ -254,11 +247,7 @@ file_field_list = ['record_id','pdf_file','broad_import_pdf',
                    'completed_signed_consent']
 
 # %%
-<<<<<<< HEAD
-### filter original export from above by the file fields
-=======
 ### filter export dataframe by the file fields
->>>>>>> 4a5ebca9da7b5dc76fee0fb4a3f95f94ae0e85bb
 files_export_df = R4_fullexport_df[file_field_list]
 
 # %%
@@ -299,12 +288,10 @@ for ind in consent_files_list:
     with open(DATA_DIR + str(filename), 'wb') as f:
         f.write(r.content)
         f.close()
-
-<<<<<<< HEAD
+        
 # ## Convert files to HIM-compatible format
 =======
 # ## Convert consent files to HIM-compatible format
->>>>>>> 4a5ebca9da7b5dc76fee0fb4a3f95f94ae0e85bb
 
 # %%
 ### create dataframe of fields for consent files for HIM
