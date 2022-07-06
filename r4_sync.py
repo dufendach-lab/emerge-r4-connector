@@ -36,33 +36,6 @@ def print_time():
     data = current_time
     return data
 
-# # %%
-# ### local Data dictionary export
-# data = {
-#     'token': ['R4copy_api_token'],
-#     'content': 'metadata',
-#     'format': 'json',
-#     'returnFormat': 'json'
-# }
-# r = requests.post(cfg.config['R4copy_api_url'],data=data)
-# meta_local_json = r.json()
-# print('HTTP Status: ' + str(r.status_code))
-#
-# ### R4 Data dictionary export
-# data = {
-#     'token': ['R4_api_token'],
-#     'content': 'metadata',
-#     'format': 'json',
-#     'returnFormat': 'json'
-# }
-# r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH)
-# meta_r4_json = r.json()
-# print('HTTP Status: ' + str(r.status_code))
-#
-# # remove field already existing.
-# meta_local_json_field_name_list = [i['field_name'] for i in meta_local_json]
-# meta_r4_json_deduplicated = [i for i in meta_r4_json if i['field_name'] not in meta_local_json_field_name_list]
-
 # %%
 ### EXPORT existing records from R4/source REDCap
 data = {
