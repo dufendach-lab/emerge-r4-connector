@@ -88,6 +88,10 @@ data = {
 }
 
 # %%
+r = requests.post(cfg.config['R4copy_api_url'],data=data, verify=USE_SSH)
+print('HTTP Status: ' + str(r.status_code))
+
+# %%
 ### store data from request
 R4copy_exportIDs_string = r.content.decode("utf-8")
 R4copy_exportIDs_dict = json.loads(R4copy_exportIDs_string)
@@ -134,10 +138,6 @@ if num_delete > 0:
     print('HTTP Status: ' + str(r.status_code))
 
 # %%
-r = requests.post(cfg.config['R4copy_api_url'],data=data, verify=USE_SSH)
-print('HTTP Status: ' + str(r.status_code))
-
-# %%
 ### Get last run time from date file
 last_run_file = Path('./run_history.log')
 last_run_file.touch(exist_ok=True)
@@ -181,11 +181,13 @@ data = {
     'forms[17]': 'mono_sample',
     'forms[18]': 'broad_ordering',
     'forms[19]': 'metree_import',
-    'forms[20]': 'metree',
-    'forms[21]': 'family_relationships',
-    'forms[22]': 'completed_signed_consent',
-    'forms[23]': 'admin_form',
-    'forms[24]': 'unified_variables',
+    'forms[20]': 'family_relationships',
+    'forms[21]': 'completed_signed_consent',
+    'forms[22]': 'admin_form',
+    'forms[23]': 'unified_variables',
+    'forms[24]': 'r4_metree_result',
+    'forms[25]': 'r4_broad_result',
+    'forms[26]': 'gira_clinical_variables',
     'rawOrLabel': 'raw',
     'rawOrLabelHeaders': 'raw',
     'exportCheckboxLabel': 'false',
@@ -202,7 +204,7 @@ print('HTTP Status: ' + str(r.status_code))
 
 # %%
 ## Check the count of records updated since last run. If nothing to be updated, quit the script.
-record_count = r.json()['count']
+record_count = len(r.json())
 if (record_count < 1):
     write_file('run_history.log', print_time())
     quit()
@@ -221,7 +223,7 @@ file_field_list = ['record_id','pdf_file','broad_import_pdf',
 
 # %%
 ### filter original export from above by the file fields
-files_export_df = export_df[file_field_list]
+files_export_df = R4_fullexport_df[file_field_list]
 
 # %%
 ### melt file dataframe so record, field, and filename are columns
@@ -263,7 +265,6 @@ for ind in consent_files_list:
         f.write(r.content)
         f.close()
 
-# %% [markdown]
 # ## Convert files to HIM-compatible format
 
 # %%
