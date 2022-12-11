@@ -20,6 +20,23 @@ USE_SSH = False
 DATA_DIR = "./data/"
 
 # %%
+### define functions for logging runtimes
+def write_file(filename,data):
+    if os.path.isfile(filename):
+        with open(filename, 'a') as f:
+            f.write('\n' + data)
+    else:
+        with open(filename, 'w') as f:
+            f.write(data)
+
+# %%
+def print_time():
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d %H:%M")
+    data = current_time
+    return data
+
+# %%
 ### EXPORT existing records from R4/source REDCap
 data = {
     'token': cfg.config['R4_api_token'],
@@ -80,7 +97,6 @@ R4copy_exportIDs_string = r.content.decode("utf-8")
 R4copy_exportIDs_dict = json.loads(R4copy_exportIDs_string)
 R4copy_exportIDs_df = pandas.DataFrame(R4copy_exportIDs_dict)
 R4copy_exportIDs = R4copy_exportIDs_df['record_id'].tolist()
-# R4copy_exportIDs = pandas.DataFrame(R4copy_exportIDs, columns=['record_id'])
 
 # %%
 ### calculate differences in IDs between projects
@@ -153,20 +169,21 @@ data = {
     'forms[8]': 'pre_ror_child',
     'forms[9]': 'pre_ror_adult',
     'forms[10]': 'pre_ror_transition',
-    'forms[11]': 'post_ror',
-    'forms[12]': 'adverse_events',
-    'forms[13]': 'study_withdrawal',
-    'forms[14]': 'consent_upload',
-    'forms[15]': 'notes',
-    'forms[16]': 'gira_reports',
-    'forms[17]': 'mono_sample',
-    'forms[18]': 'broad_ordering',
-    'forms[19]': 'metree_import',
-    'forms[20]': 'metree',
-    'forms[21]': 'family_relationships',
-    'forms[22]': 'completed_signed_consent',
-    'forms[23]': 'admin_form',
-    'forms[24]': 'unified_variables',
+    'forms[11]': 'adverse_events',
+    'forms[12]': 'study_withdrawal',
+    'forms[13]': 'consent_upload',
+    'forms[14]': 'notes',
+    'forms[15]': 'gira_reports',
+    'forms[16]': 'mono_sample',
+    'forms[17]': 'broad_ordering',
+    'forms[18]': 'metree_import',
+    'forms[19]': 'family_relationships',
+    'forms[20]': 'completed_signed_consent',
+    'forms[21]': 'admin_form',
+    'forms[22]': 'unified_variables',
+    'forms[23]': 'r4_metree_result',
+    'forms[24]': 'r4_broad_result',
+    'forms[25]':'gira_clinical_variables',
     'rawOrLabel': 'raw',
     'rawOrLabelHeaders': 'raw',
     'exportCheckboxLabel': 'false',
@@ -182,10 +199,10 @@ r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 # %%
-## Check the record count. If nothing to be updated, quit the script.
-
+### Check the record count. If nothing to be updated, quit the script.
 record_count = len(r.json())
 if (record_count < 1):
+    write_file('run_history.log', print_time())
     quit()
 
 # %%
@@ -379,20 +396,4 @@ print('HTTP Status: ' + str(r.status_code))
 
 # %%
 ### Update date file with latest run time
-def write_file(filename,data):
-    if os.path.isfile(filename):
-        with open(filename, 'a') as f:          
-            f.write('\n' + data)   
-    else:
-        with open(filename, 'w') as f:                   
-            f.write(data)
-
-# %%
-def print_time():   
-    now = datetime.now()
-    current_time = now.strftime("%Y-%m-%d %H:%M")
-    data = current_time
-    return data
-
-# %%
 write_file('run_history.log' , print_time())
