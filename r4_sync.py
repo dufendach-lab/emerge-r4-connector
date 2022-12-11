@@ -20,23 +20,6 @@ USE_SSH = False
 DATA_DIR = "./data/"
 
 # %%
-### define functions for logging runtimes
-def write_file(filename,data):
-    if os.path.isfile(filename):
-        with open(filename, 'a') as f:
-            f.write('\n' + data)
-    else:
-        with open(filename, 'w') as f:
-            f.write(data)
-
-# %%
-def print_time():
-    now = datetime.now()
-    current_time = now.strftime("%Y-%m-%d %H:%M")
-    data = current_time
-    return data
-
-# %%
 ### EXPORT existing records from R4/source REDCap
 data = {
     'token': cfg.config['R4_api_token'],
@@ -97,6 +80,7 @@ R4copy_exportIDs_string = r.content.decode("utf-8")
 R4copy_exportIDs_dict = json.loads(R4copy_exportIDs_string)
 R4copy_exportIDs_df = pandas.DataFrame(R4copy_exportIDs_dict)
 R4copy_exportIDs = R4copy_exportIDs_df['record_id'].tolist()
+# R4copy_exportIDs = pandas.DataFrame(R4copy_exportIDs, columns=['record_id'])
 
 # %%
 ### calculate differences in IDs between projects
@@ -135,7 +119,6 @@ if num_delete > 0:
     }
     r = requests.post(cfg.config['R4copy_api_url'], data=fields)
     print('HTTP Status: ' + str(r.status_code))
-
 # %%
 ### Get last run time from date file
 last_run_file = Path('./run_history.log')
@@ -179,13 +162,11 @@ data = {
     'forms[17]': 'mono_sample',
     'forms[18]': 'broad_ordering',
     'forms[19]': 'metree_import',
-    'forms[20]': 'family_relationships',
-    'forms[21]': 'completed_signed_consent',
-    'forms[22]': 'admin_form',
-    'forms[23]': 'unified_variables',
-    'forms[24]': 'r4_metree_result',
-    'forms[25]': 'r4_broad_result',
-    'forms[26]': 'gira_clinical_variables',
+    'forms[20]': 'metree',
+    'forms[21]': 'family_relationships',
+    'forms[22]': 'completed_signed_consent',
+    'forms[23]': 'admin_form',
+    'forms[24]': 'unified_variables',
     'rawOrLabel': 'raw',
     'rawOrLabelHeaders': 'raw',
     'exportCheckboxLabel': 'false',
@@ -201,11 +182,10 @@ r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 # %%
+## Check the record count. If nothing to be updated, quit the script.
 
-## Check the count of records updated since last run. If nothing to be updated, quit the script.
 record_count = len(r.json())
 if (record_count < 1):
-    write_file('run_history.log', print_time())
     quit()
 
 # %%
@@ -261,7 +241,7 @@ for ind in consent_files_list:
     with open(DATA_DIR + str(filename), 'wb') as f:
         f.write(r.content)
         f.close()
-        
+
 # ## Convert consent files to HIM-compatible format
 
 # %%
@@ -399,4 +379,20 @@ print('HTTP Status: ' + str(r.status_code))
 
 # %%
 ### Update date file with latest run time
+def write_file(filename,data):
+    if os.path.isfile(filename):
+        with open(filename, 'a') as f:          
+            f.write('\n' + data)   
+    else:
+        with open(filename, 'w') as f:                   
+            f.write(data)
+
+# %%
+def print_time():   
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d %H:%M")
+    data = current_time
+    return data
+
+# %%
 write_file('run_history.log' , print_time())
