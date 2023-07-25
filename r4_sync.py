@@ -212,6 +212,18 @@ def print_time():
     data = current_time
     return data
 
+class DomainResource:
+    resourceType: str
+    id: int
+
+class Reference:
+    reference: str
+
+def to_reference(res: DomainResource):
+    ref = Reference()
+    ref.reference = res.resourceType + "/" + res.id
+    return ref
+
 record_count = len(r.json())
 print('Records to update: ' + str(record_count))
 print(print_time())
