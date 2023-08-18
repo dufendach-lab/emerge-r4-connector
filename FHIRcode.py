@@ -409,7 +409,7 @@ headers = {
 
 # response = requests.request("POST", url, headers=headers, data=payload, verify='/Users/casjk8/Documents/llmirthuat02.pem')
 
-r = requests.post('https://llmirthuat02:40010/fhir/', data=payload, auth=('eMerge', 'eMerge'), headers=headers, verify='/Users/casjk8/Documents/llmirthuat02.pem')
+r = requests.post('https://llmirthuat02:40010/fhir/', data=payload, auth=(USER, PASS), headers=headers, verify='/Users/casjk8/Documents/llmirthuat02.pem')
 print(r.text)
 
 #print(response.text)
