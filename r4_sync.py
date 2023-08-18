@@ -40,7 +40,7 @@ data = {
 }
 
 # %%
-r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH)
+r = requests.post(cfg.config['R4_api_url'], data=data, verify=USE_SSH, timeout=None)
 print('HTTP Status: ' + str(r.status_code))
 
 # %%
@@ -71,7 +71,7 @@ data = {
 }
 
 # %%
-r = requests.post(cfg.config['R4copy_api_url'],data=data, verify=USE_SSH)
+r = requests.post(cfg.config['R4copy_api_url'], data=data, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 # %%
@@ -144,7 +144,7 @@ data = {
     'format': 'json',
     'type': 'flat',
     'csvDelimiter': '',
-    'records[0]': '15084',
+    'records[0]': '14618',
     'forms[0]': 'prescreening_survey',
     'forms[1]': 'transition_page',
     'forms[2]': 'primary_consent',
@@ -212,17 +212,6 @@ def print_time():
     data = current_time
     return data
 
-class DomainResource:
-    resourceType: str
-    id: int
-
-class Reference:
-    reference: str
-
-def to_reference(res: DomainResource):
-    ref = Reference()
-    ref.reference = res.resourceType + "/" + res.id
-    return ref
 
 record_count = len(r.json())
 print('Records to update: ' + str(record_count))

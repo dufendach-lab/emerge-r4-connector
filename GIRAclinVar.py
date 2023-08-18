@@ -22,32 +22,36 @@ R4_api_url='https://redcap.vanderbilt.edu/api/'
 R4copy_api_url='https://redcap.research.cchmc.org/api/'
 USE_SSH = False
 
-record_ids = pandas.read_excel("/Volumes/bmi-7/I2B2/Reports/Emerge_R4/01-MAY-2023/UC_18MAY2023/Prows_eMERGIV_UCMRNsforShip2_through15MAY2023.xlsx", engine='openpyxl')
+record_ids = pandas.read_csv("/Volumes/Emerge_R4/26-JUL-2023 for Shipment 3/UC_27JUL2023/Prowse_MERGEIV_UCMRNs_ship3 2.csv")
 record_ids = pandas.DataFrame(record_ids)
-
+record_ids = record_ids.drop(record_ids.index[19:83])
 # for UC only
 record_ids = record_ids.drop('uc_mrn', axis=1)
-record_ids.rename(columns={'record_id1': 'record_id', 'ptlabid': 'participant_lab_id'},inplace=True)
+record_ids.rename(columns={'record_id1': 'record_id', 'ptlabid': 'participant_lab_id'}, inplace=True)
 record_ids = record_ids[['record_id', 'participant_lab_id']].copy()
+record_ids = record_ids.astype({"record_id": int})
+
 ###
 
 record_ids.rename(columns={'Record ID': 'record_id', 'Participant Lab ID': 'participant_lab_id'},inplace=True)
 record_ids = record_ids[['record_id', 'participant_lab_id']].copy()
-record_ids.drop(record_ids[record_ids['record_id'] == 7943].index, inplace = True)
+# record_ids.drop(record_ids[record_ids['record_id'] == 7943].index, inplace = True)
 
-general_info = pandas.read_csv("/Volumes/bmi-7/I2B2/Reports/Emerge_R4/01-MAY-2023/UC_18MAY2023/UCHealth_Demo_202305.csv")
+general_info = pandas.read_csv("/Volumes/Emerge_R4/26-JUL-2023 for Shipment 3/UC_27JUL2023/UCHealth_Demo_202307.csv")
 general_info = pandas.DataFrame(general_info)
 general_info.columns = map(str.lower, general_info.columns)
 general_info_import = pandas.merge(record_ids, general_info, how="inner", on="participant_lab_id")
+
 # for UC only
 general_info_import = general_info_import.drop(columns=['participant_lab_id', 'pat_mrn_id'])
 ###
+
 general_info_import.rename(columns={'part_first_name': 'ehr_participant_first_name', 'part_last_name': 'ehr_participant_last_name', 'date_of_birth': 'ehr_date_of_birth'},inplace=True)
 general_info_import['ehr_date_of_birth'] = pandas.to_datetime(general_info_import['ehr_date_of_birth'])
 general_info_import['ehr_date_of_birth'] = general_info_import['ehr_date_of_birth'].dt.strftime('%Y-%m-%d')
 general_info_json = general_info_import.to_json(orient='records')
 
-ICD_flags = pandas.read_csv("/Volumes/bmi-7/I2B2/Reports/Emerge_R4/01-MAY-2023/UC_18MAY2023/UCHealth_ICD_flag_first_dx_3yr_202305.csv")
+ICD_flags = pandas.read_csv("/Volumes/Emerge_R4/26-JUL-2023 for Shipment 3/UC_27JUL2023/UCHealth_ICD_flag_first_dx_3yr_202307.csv")
 ICD_flags = pandas.DataFrame(ICD_flags)
 ICD_flags.columns = map(str.lower, ICD_flags.columns)
 ICD_import = pandas.merge(record_ids, ICD_flags, how="inner", on="participant_lab_id")
@@ -59,7 +63,7 @@ ICD_import.drop(ICD_import[ICD_import['record_id'] == 7943].index, inplace = Tru
 #ICD_import = ICD_import.drop('pat_id', axis=1)
 ICD_json = ICD_import.to_json(orient='records')
 
-allergy_labs = pandas.read_csv("/Volumes/bmi-7/I2B2/Reports/Emerge_R4/01-MAY-2023/UC_18MAY2023/UCHealth_Labs_Allergy_202305.csv")
+allergy_labs = pandas.read_csv("/Volumes/Emerge_R4/26-JUL-2023 for Shipment 3/UC_27JUL2023/UCHealth_Labs_Allergy_202307.csv")
 allergy_labs = pandas.DataFrame(allergy_labs)
 allergy_labs.columns = map(str.lower, allergy_labs.columns)
 allergy_labs_import = pandas.merge(record_ids, allergy_labs, how="inner", on="participant_lab_id")
@@ -68,7 +72,7 @@ allergy_labs_import = allergy_labs_import.drop('pat_mrn_id', axis=1)
 allergy_labs_import = allergy_labs_import[allergy_labs_import.record_id.notnull()]
 allergy_labs_json = allergy_labs_import.to_json(orient='records')
 
-numerical_labs = pandas.read_csv("/Volumes/bmi-7/I2B2/Reports/Emerge_R4/01-MAY-2023/UC_18MAY2023/UCHealth_Labs_Numerical_202305.csv")
+numerical_labs = pandas.read_csv("/Volumes/Emerge_R4/26-JUL-2023 for Shipment 3/UC_27JUL2023/UCHealth_Labs_Numerical_202307.csv")
 numerical_labs = pandas.DataFrame(numerical_labs)
 numerical_labs.columns = map(str.lower, numerical_labs.columns)
 numerical_labs_import = pandas.merge(record_ids, numerical_labs, how="inner", on="participant_lab_id")
@@ -138,7 +142,7 @@ fields = {
     'returnContent': 'count',
     'returnFormat': 'json'
 }
-r = requests.post(R4_api_url,data=fields, verify=USE_SSH)
+r = requests.post(R4_api_url, data=fields, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 #%% ICD Age Flags import
@@ -155,7 +159,7 @@ fields = {
     'returnContent': 'count',
     'returnFormat': 'json'
 }
-r = requests.post(R4_api_url,data=fields, verify=USE_SSH)
+r = requests.post(R4_api_url, data=fields, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 #%% allergy labs import
@@ -172,7 +176,7 @@ fields = {
     'returnContent': 'count',
     'returnFormat': 'json'
 }
-r = requests.post(R4_api_url,data=fields, verify=USE_SSH)
+r = requests.post(R4_api_url, data=fields, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 #%% numerical labs import
@@ -190,7 +194,7 @@ fields = {
     'returnContent': 'count',
     'returnFormat': 'json'
 }
-r = requests.post(R4_api_url,data=fields, verify=USE_SSH)
+r = requests.post(R4_api_url, data=fields, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 # cholesterol
