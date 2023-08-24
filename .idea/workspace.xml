@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="d84e131a-9599-4397-a0d4-6a2427e5845c" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/venv/lib/python3.10/site-packages/fhirclient/models/fhirabstractbase.py" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2M6iOYMCJMSsGiywOCxs9ujZOzl" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/casjk8/PycharmProjects/erin-emerge-r4-connector&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;aDefault&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;http.certificates&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="r4_sync" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="erin-emerge-r4-connector" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/r4_sync.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.r4_sync" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d84e131a-9599-4397-a0d4-6a2427e5845c" name="Changes" comment="" />
+      <created>1677094400576</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1677094400576</updated>
+      <workItem from="1677094403994" duration="284000" />
+      <workItem from="1677100380090" duration="463000" />
+      <workItem from="1677540882041" duration="2428000" />
+      <workItem from="1678844592147" duration="4118000" />
+      <workItem from="1678992762157" duration="16000" />
+      <workItem from="1679926870082" duration="3297000" />
+      <workItem from="1680105767756" duration="2272000" />
+      <workItem from="1680705759819" duration="1692000" />
+      <workItem from="1681683287351" duration="2098000" />
+      <workItem from="1681744789715" duration="14000" />
+      <workItem from="1681750341155" duration="1810000" />
+      <workItem from="1683058015057" duration="5049000" />
+      <workItem from="1683125463722" duration="598000" />
+      <workItem from="1683127476791" duration="9178000" />
+      <workItem from="1683216943504" duration="4054000" />
+      <workItem from="1683645660239" duration="684000" />
+      <workItem from="1683813907237" duration="2071000" />
+      <workItem from="1684164028903" duration="5410000" />
+      <workItem from="1684337281365" duration="3048000" />
+      <workItem from="1684420532186" duration="9569000" />
+      <workItem from="1684892330757" duration="2716000" />
+      <workItem from="1684942912502" duration="6433000" />
+      <workItem from="1685451286314" duration="1222000" />
+      <workItem from="1685502871251" duration="599000" />
+      <workItem from="1686008422802" duration="36196000" />
+      <workItem from="1686240955597" duration="11745000" />
+      <workItem from="1686933455833" duration="4634000" />
+      <workItem from="1687357255543" duration="14283000" />
+      <workItem from="1687908940379" duration="12757000" />
+      <workItem from="1687964554640" duration="2623000" />
+      <workItem from="1688061230806" duration="4049000" />
+      <workItem from="1689787844036" duration="65062000" />
+      <workItem from="1691438898179" duration="21238000" />
+      <workItem from="1692841256757" duration="2007000" />
+      <workItem from="1692846620789" duration="1546000" />
+    </task>
+    <task id="LOCAL-00001" summary="adding clinical variables sync script">
+      <created>1677100484029</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1677100484029</updated>
+    </task>
+    <task id="LOCAL-00002" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1689790176222</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1689790176222</updated>
+    </task>
+    <task id="LOCAL-00003" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1689790584626</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1689790584626</updated>
+    </task>
+    <task id="LOCAL-00004" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1690293425033</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1690293425033</updated>
+    </task>
+    <task id="LOCAL-00005" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1692367167839</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1692367167839</updated>
+    </task>
+    <task id="LOCAL-00006" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1692841278199</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1692841278199</updated>
+    </task>
+    <task id="LOCAL-00007" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1692842499172</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1692842499172</updated>
+    </task>
+    <task id="LOCAL-00008" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1692845612971</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1692845612971</updated>
+    </task>
+    <task id="LOCAL-00009" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1692846691648</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1692846691648</updated>
+    </task>
+    <task id="LOCAL-00010" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1692847150823</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1692847150823</updated>
+    </task>
+    <task id="LOCAL-00011" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1692847394575</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1692847394575</updated>
+    </task>
+    <task id="LOCAL-00012" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1692886199146</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1692886199146</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="adding clinical variables sync script" />
+    <option name="LAST_COMMIT_MESSAGE" value="adding clinical variables sync script" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/erin_emerge_r4_connector$r4_sync.coverage" NAME="r4_sync Coverage Results" MODIFIED="1687357880475" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
