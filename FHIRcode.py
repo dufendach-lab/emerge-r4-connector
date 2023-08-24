@@ -13,10 +13,10 @@ from urllib import request, parse
 # import fhir
 
 # define server settings and connect
-settings = {
-    'app_id': 'emerge_gira_app',
-    'api_base': 'http://localhost:8080/fhir'
-}
+# settings = {
+#     'app_id': 'emerge_gira_app',
+#     'api_base': 'http://localhost:8080/fhir'
+# }
 
 smart = client.FHIRClient(settings=settings)
 
@@ -25,12 +25,19 @@ smart = client.FHIRClient(settings=settings)
     #encoded_string = base64.b64encode(pdf_file.read())
     #encoded_string = str(encoded_string)
 
-datafile=open('/Users/casjk8/Documents/testBase64.pdf', 'rb')
-pdfdatab=datafile.read()    #this is binary data
-datafile.close()
-import codecs
-b64PDF = codecs.encode(pdfdatab, 'base64')
-Sb64PDF=b64PDF.decode('utf-8')
+import base64
+with open("/Users/casjk8/Documents/testBase64.pdf", "rb") as pdf_file:
+    encoded_string = base64.b64encode(pdf_file.read())
+    decoded_string = encoded_string.decode("utf-8")
+
+print(decoded_string)
+
+# datafile=open('/Users/casjk8/Documents/testBase64.pdf', 'rb')
+# pdfdatab=datafile.read()    #this is binary data
+# datafile.close()
+# import codecs
+# b64PDF = codecs.encode(pdfdatab, 'base64')
+# Sb64PDF=b64PDF.decode('utf-8')
 
 # define function for referencing a different resource
 def to_reference(res):
