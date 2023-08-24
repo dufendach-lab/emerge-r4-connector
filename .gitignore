@@ -3,3 +3,4 @@ __pycache__
 /data
 run_history.log
 /config/keys_config.cfg
+/config/.ipynb_checkpoints
