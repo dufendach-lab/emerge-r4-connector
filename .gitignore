@@ -5,4 +5,6 @@ run_history.log
 /config/keys_config.cfg
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+.idea
+.DS_Store
 

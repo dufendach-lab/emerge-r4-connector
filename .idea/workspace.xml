@@ -6,8 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d84e131a-9599-4397-a0d4-6a2427e5845c" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/FHIRcode-checkpoint.ipynb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.ipynb_checkpoints/nightly_r4_update_script-checkpoint.ipynb" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -128,7 +126,7 @@
       <workItem from="1691438898179" duration="21238000" />
       <workItem from="1692841256757" duration="2007000" />
       <workItem from="1692846620789" duration="1546000" />
-      <workItem from="1692886388804" duration="246000" />
+      <workItem from="1692886388804" duration="375000" />
     </task>
     <task id="LOCAL-00001" summary="adding clinical variables sync script">
       <created>1677100484029</created>
@@ -233,7 +231,15 @@
       <option name="project" value="LOCAL" />
       <updated>1692886455299</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="adding clinical variables sync script">
+      <option name="closed" value="true" />
+      <created>1692886646478</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1692886646478</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
