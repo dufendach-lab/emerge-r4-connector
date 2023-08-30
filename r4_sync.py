@@ -18,7 +18,12 @@ from config import api_config as cfg;
 ### Constants
 USE_SSH = False
 DATA_DIR = "./data/"
-
+headers = requests.utils.default_headers()
+headers.update(
+    {
+        'User-Agent': 'My User Agent 1.0',
+    }
+)
 # %%
 ### EXPORT existing records from R4/source REDCap
 data = {
@@ -35,12 +40,12 @@ data = {
     'exportSurveyFields': 'true',
     'exportDataAccessGroups': 'false',
     'returnFormat': 'json',
-    'dateRangeBegin': '2000-01-01 00:00:00',
+    'dateRangeBegin': '2010-01-01 00:00:00',
     'dateRangeEnd': ''
 }
 
 # %%
-r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH)
+r = requests.post(cfg.config['R4_api_url'], data=data, verify=USE_SSH, timeout=None, headers=headers)
 print('HTTP Status: ' + str(r.status_code))
 
 # %%
@@ -71,7 +76,7 @@ data = {
 }
 
 # %%
-r = requests.post(cfg.config['R4copy_api_url'],data=data, verify=USE_SSH)
+r = requests.post(cfg.config['R4copy_api_url'], data=data, verify=USE_SSH)
 print('HTTP Status: ' + str(r.status_code))
 
 # %%
@@ -92,6 +97,7 @@ delete_from_R4copy = list(set(R4copy_exportIDs) - set(R4_exportIDs))
 num_delete = len(delete_from_R4copy)
 delete_from_R4copy = numpy.asarray(delete_from_R4copy)
 
+# %%
 if num_add > 0:
     fields = {
         'token': cfg.config['R4copy_api_token'],
@@ -119,6 +125,7 @@ if num_delete > 0:
     }
     r = requests.post(cfg.config['R4copy_api_url'], data=fields)
     print('HTTP Status: ' + str(r.status_code))
+
 # %%
 ### Get last run time from date file
 last_run_file = Path('./run_history.log')
@@ -150,23 +157,34 @@ data = {
     'forms[5]': 'end_of_consent_transition',
     'forms[6]': 'baseline_survey_adult',
     'forms[7]': 'baseline_survey_child',
-    'forms[8]': 'pre_ror_child',
-    'forms[9]': 'pre_ror_adult',
+    'forms[8]': 'pre_ror_adult',
+    'forms[9]': 'pre_ror_child',
     'forms[10]': 'pre_ror_transition',
-    'forms[11]': 'post_ror',
-    'forms[12]': 'adverse_events',
-    'forms[13]': 'study_withdrawal',
-    'forms[14]': 'consent_upload',
-    'forms[15]': 'notes',
-    'forms[16]': 'gira_reports',
-    'forms[17]': 'mono_sample',
-    'forms[18]': 'broad_ordering',
-    'forms[19]': 'metree_import',
-    'forms[20]': 'metree',
-    'forms[21]': 'family_relationships',
-    'forms[22]': 'completed_signed_consent',
-    'forms[23]': 'admin_form',
-    'forms[24]': 'unified_variables',
+    'forms[11]': 'adverse_events',
+    'forms[12]': 'study_withdrawal',
+    'forms[13]': 'consent_upload',
+    'forms[14]': 'notes',
+    'forms[15]': 'mono_sample',
+    'forms[16]': 'broad_ordering',
+    'forms[17]': 'metree_import',
+    'forms[18]': 'family_relationships',
+    'forms[19]': 'completed_signed_consent',
+    'forms[20]': 'admin_form',
+    'forms[22]': 'unified_variables',
+    'forms[23]': 'r4_metree_result',
+    'forms[24]': 'r4_invitae_result',
+    'forms[25]': 'r4_broad_result',
+    'forms[26]': 'gira_clinical_variables',
+    'forms[27]': 'invitae_import',
+    'forms[28]': 'module_variables',
+    'forms[29]': 'gira_review',
+    'forms[30]': 'staged_gira',
+    'forms[31]': 'gira_reports',
+    'forms[32]': 'ror',
+    'forms[33]': 'postror_child',
+    'forms[34]': 'postror_adult',
+    'forms[35]': 'adult_fhh_rescue',
+    'forms[36]': 'pediatric_fhh_rescue',
     'rawOrLabel': 'raw',
     'rawOrLabelHeaders': 'raw',
     'exportCheckboxLabel': 'false',
@@ -178,14 +196,32 @@ data = {
 }
 
 # %%
-r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH)
+r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH, timeout=None)
 print('HTTP Status: ' + str(r.status_code))
 
 # %%
-## Check the record count. If nothing to be updated, quit the script.
+### Check the record count. If nothing to be updated, quit the script.
+
+def write_file(filename,data):
+    if os.path.isfile(filename):
+        with open (filename, 'a') as f:
+            f.write('\n' + data)
+    else:
+        with open(filename, 'w') as f:
+            f.write(data)
+
+def print_time():
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d %H:%M")
+    data = current_time
+    return data
+
 
 record_count = len(r.json())
+print('Records to update: ' + str(record_count))
+print(print_time())
 if (record_count < 1):
+    print('No records to update, quitting script')
     quit()
 
 # %%
@@ -193,11 +229,31 @@ if (record_count < 1):
 R4_fullexport_string = r.content.decode("utf-8")
 R4_fullexport_dict = json.loads(R4_fullexport_string)
 R4_fullexport_df = pandas.DataFrame(R4_fullexport_dict)
+R4_fullexport_df = R4_fullexport_df.loc[:, ~R4_fullexport_df.columns.str.contains('timestamp')]
+# R4_short_df1 = R4_fullexport_df.loc[0:200]
+# R4_short_df2 = R4_fullexport_df.loc[201:400]
+# R4_short_df3 = R4_fullexport_df.loc[401:600]
+# R4_short_df4 = R4_fullexport_df.loc[601:800]
+# R4_short_df5 = R4_fullexport_df.loc[801:1000]
+# R4_short_df6 = R4_fullexport_df.loc[1001:1200]
+# R4_short_df7 = R4_fullexport_df.loc[1201:1400]
+# R4_short_df8 = R4_fullexport_df.loc[1401:1626]
+# R4_short_string1 = R4_short_df1.to_json(orient='records')
+# R4_short_string2 = R4_short_df2.to_json(orient='records')
+# R4_short_string3 = R4_short_df3.to_json(orient='records')
+# R4_short_string4 = R4_short_df4.to_json(orient='records')
+# R4_short_string5 = R4_short_df5.to_json(orient='records')
+# R4_short_string6 = R4_short_df6.to_json(orient='records')
+# R4_short_string7 = R4_short_df7.to_json(orient='records')
+# R4_short_string8 = R4_short_df8.to_json(orient='records')
 
+R4_edited_string = R4_fullexport_df.to_json(orient='records')
 # %%
 ### create list of file fields that need to be exported + copied over
 file_field_list = ['record_id','pdf_file','broad_import_pdf',
-                   'completed_signed_consent']
+                   'completed_signed_consent', 'metree_import_json_file',
+                   'metree_import_png', 'invitae_import_json_file',
+                   'invitae_hl7_file', 'invitae_import_pdf']
 
 # %%
 ### filter export dataframe by the file fields
@@ -236,26 +292,25 @@ for ind in consent_files_list:
         'event': '',
         'returnFormat': 'json'
         }
-    r = requests.post(cfg.config['R4_api_url'],data=data,verify=USE_SSH)
+    r = requests.post(cfg.config['R4_api_url'],data=data,verify=USE_SSH, timeout=None)
     print('HTTP Status: ' + str(r.status_code))
     with open(DATA_DIR + str(filename), 'wb') as f:
         f.write(r.content)
         f.close()
 
-# ## Convert consent files to HIM-compatible format
-
-# %%
+#%% Convert consent files to HIM-compatible format
 ### create dataframe of fields for consent files for HIM
-him_filename_fields = ['record_id','age','name_of_participant_part1',
-                       'date_consent_cchmc_pp_2','date_p2_consent_cchmc',
-                       'date_of_birth_child','date_of_birth']
+him_filename_fields = ['record_id', 'age', 'name_of_participant_part1',
+                       'date_consent_cchmc_pp_2', 'date_p2_consent_cchmc',
+                       'date_of_birth_child', 'date_of_birth']
 him_filename_df = R4_fullexport_df[him_filename_fields]
-him_filename_df = him_filename_df[him_filename_df.name_of_participant_part1 != '']
-him_filename_df = him_filename_df.astype({"age": int})
+# him_filename_df = him_filename_df[him_filename_df.name_of_participant_part1 != '']
+him_filtered = him_filename_df.loc[(him_filename_df['date_consent_cchmc_pp_2'] != '') | (him_filename_df['date_p2_consent_cchmc'] != '')]
+him_filtered = him_filtered.astype({"age": int})
 
 # %%
 ### merge dataframes for HIM file fields + table of consent file exports
-him_consent_join = pandas.merge(him_filename_df, consent_files, on='record_id')
+him_consent_join = pandas.merge(him_filtered, consent_files, on='record_id')
 
 # %%
 ### remove whitespace and special characters from participant names
@@ -312,7 +367,7 @@ for ind in him_consent_list:
         'returnFormat': 'json'
         }
     with open((DATA_DIR + str(filename)), 'rb') as f:
-        r=requests.post(cfg.config['R4copy_api_url'], data=data, files={'file':f})
+        r=requests.post(cfg.config['R4copy_api_url'], data=data, files={'file':f}, timeout=None)
         f.close()
         print('HTTP Status: ' + str(r.status_code))
 
@@ -331,7 +386,7 @@ for ind in nonconsent_files_list:
         'event': '',
         'returnFormat': 'json'
         }
-    r = requests.post(cfg.config['R4_api_url'],data=data,verify=False)
+    r = requests.post(cfg.config['R4_api_url'],data=data,verify=False, timeout=None)
     print('HTTP Status: ' + str(r.status_code))
     with open(DATA_DIR + str(filename), 'wb') as f:
         f.write(r.content)
@@ -351,7 +406,7 @@ for ind in nonconsent_files_list:
         'returnFormat': 'json'
         }
     with open((DATA_DIR + str(filename)), 'rb') as f:
-        r=requests.post(cfg.config['R4copy_api_url'], data=data, files={'file':f}, verify=USE_SSH)
+        r=requests.post(cfg.config['R4copy_api_url'], data=data, files={'file':f}, verify=USE_SSH, timeout=None)
         f.close()
         print('HTTP Status: ' + str(r.status_code))
 
@@ -370,29 +425,17 @@ fields = {
     'type': 'flat',
     'overwriteBehavior': 'normal',
     'forceAutoNumber': 'false',
-    'data': R4_fullexport_string,
+    'data': R4_edited_string,
     'returnContent': 'count',
     'returnFormat': 'json'
 }
-r = requests.post(cfg.config['R4copy_api_url'],data=fields, verify=USE_SSH)
+r = requests.post(cfg.config['R4copy_api_url'],data=fields, verify=USE_SSH, timeout=None)
 print('HTTP Status: ' + str(r.status_code))
+print(str(r.content))
 
-# %%
-### Update date file with latest run time
-def write_file(filename,data):
-    if os.path.isfile(filename):
-        with open(filename, 'a') as f:          
-            f.write('\n' + data)   
-    else:
-        with open(filename, 'w') as f:                   
-            f.write(data)
+#%% Update date file with latest run time
 
-# %%
-def print_time():   
-    now = datetime.now()
-    current_time = now.strftime("%Y-%m-%d %H:%M")
-    data = current_time
-    return data
+write_file('run_history.log', print_time())
 
-# %%
-write_file('run_history.log' , print_time())
+# find differences between R4 and copy records
+list(set(R4_exportIDs) - set(R4copy_exportIDs))
