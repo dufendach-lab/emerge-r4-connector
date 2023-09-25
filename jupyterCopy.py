@@ -7,7 +7,7 @@ import requests
 import pandas
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 from pathlib import Path
 
@@ -25,6 +25,21 @@ headers.update(
         'User-Agent': 'My User Agent 1.0',
     }
 )
+
+### Get last run time from date file
+last_run_file = Path('./run_history.log')
+last_run_file.touch(exist_ok=True)
+
+num_lines = sum(1 for _ in open(last_run_file))
+
+if num_lines < 1:
+    last_runtime = '2000-01-01 01:01'
+else:
+    with open(last_run_file, 'r') as f:
+        last_runtime = f.readlines()[-1]
+
+print("last runtime:", last_runtime)
+
 # %%
 ### EXPORT existing records from R4/source REDCap
 data = {
@@ -128,19 +143,21 @@ if num_delete > 0:
     print('HTTP Status: ' + str(r.status_code))
 
 # %%
-### Get last run time from date file
-last_run_file = Path('./run_history.log')
-last_run_file.touch(exist_ok=True)
+def print_time():
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d %H:%M")
+    data = current_time
+    return data
 
-num_lines = sum(1 for _ in open(last_run_file))
+def write_file(filename,data):
+    if os.path.isfile(filename):
+        with open (filename, 'a') as f:
+            f.write('\n' + data)
+    else:
+        with open(filename, 'w') as f:
+            f.write(data)
 
-if num_lines < 1:
-    last_runtime = '2000-01-01 01:01'
-else:
-    with open(last_run_file, 'r') as f:
-        last_runtime = f.readlines()[-1]
-
-print("last runtime:", last_runtime)
+write_file('run_history.log', print_time())
 
 # %%
 data = {
@@ -202,22 +219,6 @@ print('HTTP Status: ' + str(r.status_code))
 
 # %%
 ### Check the record count. If nothing to be updated, quit the script.
-
-def write_file(filename,data):
-    if os.path.isfile(filename):
-        with open (filename, 'a') as f:
-            f.write('\n' + data)
-    else:
-        with open(filename, 'w') as f:
-            f.write(data)
-
-def print_time():
-    now = datetime.now()
-    current_time = now.strftime("%Y-%m-%d %H:%M")
-    data = current_time
-    return data
-
-
 record_count = len(r.json())
 print('Records to update: ' + str(record_count))
 print(print_time())
@@ -255,20 +256,29 @@ file_field_list = ['record_id','pdf_file','broad_import_pdf',
                    'completed_signed_consent', 'metree_import_json_file',
                    'metree_import_png', 'invitae_import_json_file',
                    'invitae_hl7_file', 'invitae_import_pdf']
-gira_field_list = ['record_id','gira_pdf', ]
-
+gira_date_list = ['record_id', 'gira_pdf','date_gira_disclosed', 'date_gira_generated' ]
 # %%
 ### filter export dataframe by the file fields
 files_export_df = R4_fullexport_df[file_field_list]
 gira_export_df = R4_fullexport_df[gira_field_list]
+gira_date_df = R4_fullexport_df[gira_date_list]
+concat_gira = gira_date_df.groupby('record_id').agg({'date_gira_generated':'last', 'date_gira_disclosed':'first', 'gira_pdf': 'last'}).reset_index()
+concat_gira = concat_gira[concat_gira.date_gira_generated != '']
+concat_gira['date_gira_generated'] = pandas.to_datetime(concat_gira['date_gira_generated'])
+#concat_gira['date_gira_generated'] = pandas.to_datetime(concat_gira['date_gira_generated']).dt.date
+concat_gira['Difference'] = (datetime.today() - concat_gira['date_gira_generated'])
+concat_gira["Difference"] = (concat_gira["Difference"]).dt.days
+gira_uploads = concat_gira[((concat_gira['Difference'] >= 2) & (concat_gira['date_gira_disclosed'] == '')) | (concat_gira['date_gira_disclosed'] >= last_runtime)]
 # %%
 ### melt file dataframe so record, field, and filename are columns
 files_eav = pandas.melt(files_export_df, id_vars=['record_id'], var_name='field', value_name='file_name')
-gira_eav = pandas.melt(gira_export_df, id_vars=['record_id'], var_name='field', value_name='file_name')
+gira_eav = pandas.melt(gira_uploads, id_vars=['record_id'], var_name='field', value_name='file_name')
+gira_eav = gira_eav.loc[(gira_eav['field'] == 'gira_pdf')]
+
 # %%
 ### remove rows that don't have a filename (no file uploaded in R4)
 filtered_files_eav = files_eav[files_eav.file_name != '']
-filtered_gira_eav = gira_eav[gira_eav.file_name != '']
+
 # %%
 ### separate into consent files and non-consent files
 consent_files = filtered_files_eav[filtered_files_eav.field == 'completed_signed_consent']
@@ -293,7 +303,7 @@ nonconsent_files = filtered_files_eav[filtered_files_eav.field != 'completed_sig
 ### convert EAV to a list that the "for" loop below can iterate through
 consent_files_list = consent_files.values.tolist()
 nonconsent_files_list = nonconsent_files.values.tolist()
-gira_files_list = filtered_gira_eav.values.tolist()
+gira_files_list = gira_eav.values.tolist()
 # %%
 ### export consent PDF files from R4 to local folder
 for ind in consent_files_list:
@@ -372,10 +382,26 @@ print('HTTP Status: ' + str(r.status_code))
 prows_mrn_string = r.content.decode("utf-8")
 prows_mrn_dict = json.loads(prows_mrn_string)
 prows_mrn_df = pandas.DataFrame(prows_mrn_dict)
-# create dataframe of fields for GIRA FHIR message
-gira_message_fields = ['record_id', 'name_of_participant_part1', 'date_of_birth_child',
-                       'date_of_birth', 'sex_at_birth', 'gira_report_id', 'date_gira_generated']
+prows_mrn_df = prows_mrn_df[prows_mrn_df['mrn'] != '']
+prows_mrn_df['record_id1'] = prows_mrn_df['record_id1'].astype('int64')
 
+# create dataframe of fields for GIRA FHIR message
+gira_message_fields = ['record_id', 'gira_pdf','name_of_participant_part1', 'date_of_birth_child',
+                       'date_of_birth', 'sex_at_birth', 'gira_report_id', 'date_gira_generated', 'age']
+gira_message_df = R4_fullexport_df[gira_message_fields]
+gira_message_df['record_id'] = gira_message_df['record_id'].astype('int64')
+gira_uploads['record_id'] = gira_uploads['record_id'].astype('int64')
+gira_message_df['date_gira_generated'] = pandas.to_datetime(gira_message_df['date_gira_generated'])
+gira_message_df = gira_message_df.groupby('record_id').agg(
+    {'gira_pdf':'last', 'name_of_participant_part1':'first', 'gira_pdf': 'last',
+     'date_of_birth_child': 'first', 'date_of_birth': 'first', 'sex_at_birth': 'first',
+     'gira_report_id': 'last', 'date_gira_generated': 'last',
+     'age': 'first'}).reset_index()
+gira_message_df = gira_message_df[gira_message_df['gira_pdf'] != '']
+
+filtered_gira_message = pandas.merge(gira_uploads, gira_message_df, how='left', on=['record_id', 'gira_pdf', 'date_gira_generated'])
+final_gira_message = pandas.merge(filtered_gira_message, prows_mrn_df, how='left', left_on='record_id', right_on='record_id1')
+gira_message_list = final_gira_message.values.tolist()
 # %%
 ### merge dataframes for HIM file fields + table of consent file exports
 him_consent_join = pandas.merge(him_filtered, consent_files, on='record_id')
@@ -501,13 +527,6 @@ r = requests.post(cfg.config['R4copy_api_url'],data=fields, verify=USE_SSH, time
 print('HTTP Status: ' + str(r.status_code))
 print(str(r.content))
 
-#%% Update date file with latest run time
-
-write_file('run_history.log', print_time())
-
-# find differences between R4 and copy records
-list(set(R4_exportIDs) - set(R4copy_exportIDs))
-
 
 # import required packages
 from fhirclient import client
@@ -516,14 +535,6 @@ import base64
 import json
 import requests
 from urllib import request, parse
-
-# find PDF file of interest and convert to base64
-with open('/Users/casjk8/Documents/sample_site_positiveGIRA.pdf', 'rb') as binary_file:
-    binary_file_data = binary_file.read()
-    base64_encoded_data = base64.b64encode(binary_file_data)
-    base64_message = base64_encoded_data.decode('utf-8')
-
-
 # define function for referencing a different resource
 def to_reference(res):
     ref_type = res['resourceType']
@@ -531,30 +542,46 @@ def to_reference(res):
     full_ref = ref_type + "/" + ref_id
     return full_ref
 
-# create resource constants
-pat_json = {
-    "resourceType": "Patient",
-    "id": "1703",
-    "identifier": [{
-        "type": {
-            "coding": [{
-                "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
-                "code": "MR"
-            }]
-        },
-        "system": "urn:oid:2.16.840.1.113883.3.1674",
-        "value": "mrn010101"
-    }],
-    "name": [{
-        "use": "official",
-        "family": "last_name",
-        "given": ["first_name"]
-    }],
-    "birthDate": "1974-12-25",
-    "gender": "male"
-}
 
-org_hosp_json = {
+# find PDF file of interest and convert to base64 in a loop
+for item in gira_message_list:
+    record_id = ind[0]
+    giradate = ind[1]
+    filename = ind[3]
+    name = ind[5]
+    age = ind[10]
+    mrn = ind[11]
+    if age < 18:
+        dob = ind[6]
+    else:
+        dob = ind[7]
+    sex = ind[8]
+    gira_id = ind[9]
+    with open(DATA_DIR + str(filename), 'rb') as binary_file:
+        binary_file_data = binary_file.read()
+        base64_encoded_data = base64.b64encode(binary_file_data)
+        base64_message = base64_encoded_data.decode('utf-8')
+    pat_json = {
+        "resourceType": "Patient",
+        "identifier": [{
+            "type": {
+                "coding": [{
+                    "system": "http://terminology.hl7.org/CodeSystem/v2-0203",
+                    "code": "MR"
+                }]
+            },
+            "system": "urn:oid:2.16.840.1.113883.3.1674",
+            "value": mrn
+        }],
+        "name": [{
+            "use": "official",
+            "family": name.split()[1],
+            "given": [name.split()[0]]
+        }],
+        "birthDate": "1974-12-25",
+        "gender": sex
+    }
+    org_hosp_json = {
     "resourceType": "Organization",
     "id": "1702",
     "identifier": [{
@@ -573,9 +600,8 @@ org_hosp_json = {
         }
     ],
     "name": "Cincinnati Children's Hospital Medical Center"
-}
-
-org_dept_json = {
+    }
+    org_dept_json = {
     "resourceType": "Organization",
     "id": "1662",
     "identifier": [{
@@ -593,9 +619,8 @@ org_dept_json = {
     "partOf": {
         "reference": to_reference(org_hosp_json)
     }
-}
-
-prac_json = {
+    }
+    prac_json = {
     "resourceType": "Practitioner",
     "id": "1704",
     "identifier": [{
@@ -608,9 +633,8 @@ prac_json = {
         "given": ["Sharice"],
         "suffix": ["MD"]
     }]
-}
-
-enc_json = {
+    }
+    enc_json = {
     "resourceType": "Encounter",
     "id": "1705",
     "status": "planned",
@@ -630,11 +654,10 @@ enc_json = {
                 "reference": to_reference(prac_json)
             }
     }]
-}
-
-docref_json = {
+    }
+    docref_json = {
     "resourceType": "DocumentReference",
-    "id": "1706",
+    "id": gira_id,
     "status": "current",
     "description": "GIRA",
     "type": {
@@ -656,7 +679,7 @@ docref_json = {
     "content": [{
         "attachment": {
             "contentType": "application/pdf",
-            "data": decoded_string,
+            "data": base64_message,
             "title": "Genome Informed Risk Assessment"
         }
     }],
@@ -667,10 +690,9 @@ docref_json = {
             }
         ]
     }
-}
-
-# define entire bundle constant
-message_json = {
+    }
+    # define entire bundle constant
+    message_json = {
     "resourceType": "Bundle",
     "identifier": {
         "system": "http://cincinnatichildrens.org/emerge/bundle_identifier",
@@ -692,17 +714,12 @@ message_json = {
             {"resource": docref_json
             }
         ]
-}
-
-headers = {
-  'Content-Type': 'application/json'
-}
-
-url = "https://llmirthuat02:40010/fhir/"
-
-payload = message_json
-
-r = requests.post(url, headers=headers, data=payload,
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+    url = "https://llmirthuat02:40010/fhir/"
+    payload = message_json
+    r = requests.post(url, headers=headers, data=payload,
                   verify='/Users/casjk8/Documents/llmirthuat02.pem', auth=('eMerge', 'eMerge'))
-
-print(r.text)
+    print(r.text)

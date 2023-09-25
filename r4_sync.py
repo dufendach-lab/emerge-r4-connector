@@ -24,6 +24,20 @@ headers.update(
         'User-Agent': 'My User Agent 1.0',
     }
 )
+
+### Get last run time from date file
+last_run_file = Path('./run_history.log')
+last_run_file.touch(exist_ok=True)
+
+num_lines = sum(1 for _ in open(last_run_file))
+
+if num_lines < 1:
+    last_runtime = '2000-01-01 01:01'
+else:
+    with open(last_run_file, 'r') as f:
+        last_runtime = f.readlines()[-1]
+
+print("last runtime:", last_runtime)
 # %%
 ### EXPORT existing records from R4/source REDCap
 data = {
@@ -127,19 +141,21 @@ if num_delete > 0:
     print('HTTP Status: ' + str(r.status_code))
 
 # %%
-### Get last run time from date file
-last_run_file = Path('./run_history.log')
-last_run_file.touch(exist_ok=True)
+def print_time():
+    now = datetime.now()
+    current_time = now.strftime("%Y-%m-%d %H:%M")
+    data = current_time
+    return data
 
-num_lines = sum(1 for _ in open(last_run_file))
+def write_file(filename,data):
+    if os.path.isfile(filename):
+        with open (filename, 'a') as f:
+            f.write('\n' + data)
+    else:
+        with open(filename, 'w') as f:
+            f.write(data)
 
-if num_lines < 1:
-    last_runtime = '2000-01-01 01:01'
-else:
-    with open(last_run_file, 'r') as f:
-        last_runtime = f.readlines()[-1]
-
-print("last runtime:", last_runtime)
+write_file('run_history.log', print_time())
 
 # %%
 data = {
@@ -202,21 +218,6 @@ print('HTTP Status: ' + str(r.status_code))
 # %%
 ### Check the record count. If nothing to be updated, quit the script.
 
-def write_file(filename,data):
-    if os.path.isfile(filename):
-        with open (filename, 'a') as f:
-            f.write('\n' + data)
-    else:
-        with open(filename, 'w') as f:
-            f.write(data)
-
-def print_time():
-    now = datetime.now()
-    current_time = now.strftime("%Y-%m-%d %H:%M")
-    data = current_time
-    return data
-
-
 record_count = len(r.json())
 print('Records to update: ' + str(record_count))
 print(print_time())
@@ -230,22 +231,22 @@ R4_fullexport_string = r.content.decode("utf-8")
 R4_fullexport_dict = json.loads(R4_fullexport_string)
 R4_fullexport_df = pandas.DataFrame(R4_fullexport_dict)
 R4_fullexport_df = R4_fullexport_df.loc[:, ~R4_fullexport_df.columns.str.contains('timestamp')]
-# R4_short_df1 = R4_fullexport_df.loc[0:200]
-# R4_short_df2 = R4_fullexport_df.loc[201:400]
-# R4_short_df3 = R4_fullexport_df.loc[401:600]
-# R4_short_df4 = R4_fullexport_df.loc[601:800]
-# R4_short_df5 = R4_fullexport_df.loc[801:1000]
-# R4_short_df6 = R4_fullexport_df.loc[1001:1200]
-# R4_short_df7 = R4_fullexport_df.loc[1201:1400]
-# R4_short_df8 = R4_fullexport_df.loc[1401:1626]
-# R4_short_string1 = R4_short_df1.to_json(orient='records')
-# R4_short_string2 = R4_short_df2.to_json(orient='records')
-# R4_short_string3 = R4_short_df3.to_json(orient='records')
-# R4_short_string4 = R4_short_df4.to_json(orient='records')
-# R4_short_string5 = R4_short_df5.to_json(orient='records')
-# R4_short_string6 = R4_short_df6.to_json(orient='records')
-# R4_short_string7 = R4_short_df7.to_json(orient='records')
-# R4_short_string8 = R4_short_df8.to_json(orient='records')
+R4_short_df1 = R4_fullexport_df.loc[0:200]
+R4_short_df2 = R4_fullexport_df.loc[201:400]
+R4_short_df3 = R4_fullexport_df.loc[401:600]
+R4_short_df4 = R4_fullexport_df.loc[601:800]
+R4_short_df5 = R4_fullexport_df.loc[801:1000]
+R4_short_df6 = R4_fullexport_df.loc[1001:1200]
+R4_short_df7 = R4_fullexport_df.loc[1201:1400]
+R4_short_df8 = R4_fullexport_df.loc[1401:1667]
+R4_short_string1 = R4_short_df1.to_json(orient='records')
+R4_short_string2 = R4_short_df2.to_json(orient='records')
+R4_short_string3 = R4_short_df3.to_json(orient='records')
+R4_short_string4 = R4_short_df4.to_json(orient='records')
+R4_short_string5 = R4_short_df5.to_json(orient='records')
+R4_short_string6 = R4_short_df6.to_json(orient='records')
+R4_short_string7 = R4_short_df7.to_json(orient='records')
+R4_short_string8 = R4_short_df8.to_json(orient='records')
 
 R4_edited_string = R4_fullexport_df.to_json(orient='records')
 # %%
@@ -279,24 +280,24 @@ nonconsent_files_list = nonconsent_files.values.tolist()
 
 # %%
 ### export consent PDF files from R4 to local folder
-for ind in consent_files_list:
-    record_id = ind[0]
-    field = ind[1]
-    filename = ind[2]
-    data = {
-        'token': cfg.config['R4_api_token'],
-        'content': 'file',
-        'action': 'export',
-        'record': record_id,
-        'field': field,
-        'event': '',
-        'returnFormat': 'json'
-        }
-    r = requests.post(cfg.config['R4_api_url'],data=data,verify=USE_SSH, timeout=None)
-    print('HTTP Status: ' + str(r.status_code))
-    with open(DATA_DIR + str(filename), 'wb') as f:
-        f.write(r.content)
-        f.close()
+# for ind in consent_files_list:
+#     record_id = ind[0]
+#     field = ind[1]
+#     filename = ind[2]
+#     data = {
+#         'token': cfg.config['R4_api_token'],
+#         'content': 'file',
+#         'action': 'export',
+#         'record': record_id,
+#         'field': field,
+#         'event': '',
+#         'returnFormat': 'json'
+#         }
+#     r = requests.post(cfg.config['R4_api_url'],data=data,verify=USE_SSH, timeout=None)
+#     print('HTTP Status: ' + str(r.status_code))
+#     with open(DATA_DIR + str(filename), 'wb') as f:
+#         f.write(r.content)
+#         f.close()
 
 #%% Convert consent files to HIM-compatible format
 ### create dataframe of fields for consent files for HIM
@@ -311,16 +312,38 @@ him_filtered = him_filtered.astype({"age": int})
 # %%
 ### merge dataframes for HIM file fields + table of consent file exports
 him_consent_join = pandas.merge(him_filtered, consent_files, on='record_id')
-
-# %%
 ### remove whitespace and special characters from participant names
 him_consent_join['name_of_participant_part1'] = him_consent_join['name_of_participant_part1'].str.replace('\W', '')
+him_lasttime = pandas.to_datetime(last_runtime)
+him_lasttime = him_lasttime.replace(hour=0, minute=0, second=0)
+him_consent_join['date_consent_cchmc_pp_2'] = pandas.to_datetime(him_consent_join['date_consent_cchmc_pp_2'])
+him_consent_join['date_p2_consent_cchmc'] = pandas.to_datetime(him_consent_join['date_p2_consent_cchmc'])
+him_consent_join = him_consent_join.loc[(him_consent_join['date_consent_cchmc_pp_2'] >= last_runtime) | (him_consent_join['date_p2_consent_cchmc'] >= last_runtime)]
+him_consent_first_list = him_consent_join.values.tolist()
+
+for ind in him_consent_first_list:
+    record_id = ind[0]
+    field = ind[7]
+    filename = ind[8]
+    data = {
+        'token': cfg.config['R4_api_token'],
+        'content': 'file',
+        'action': 'export',
+        'record': record_id,
+        'field': field,
+        'event': '',
+        'returnFormat': 'json'
+        }
+    r = requests.post(cfg.config['R4_api_url'],data=data,verify=USE_SSH, timeout=None)
+    print('HTTP Status: ' + str(r.status_code))
+    with open(DATA_DIR + str(filename), 'wb') as f:
+        f.write(r.content)
+        f.close()
+# %%
 
 # %%
 ### reformat dates
-him_consent_join['date_consent_cchmc_pp_2'] = pandas.to_datetime(him_consent_join['date_consent_cchmc_pp_2'])
 him_consent_join['date_consent_cchmc_pp_2'] = him_consent_join['date_consent_cchmc_pp_2'].dt.strftime("%d%b%Y")
-him_consent_join['date_p2_consent_cchmc'] = pandas.to_datetime(him_consent_join['date_p2_consent_cchmc'])
 him_consent_join['date_p2_consent_cchmc'] = him_consent_join['date_p2_consent_cchmc'].dt.strftime("%d%b%Y")
 him_consent_join['date_of_birth_child'] = pandas.to_datetime(him_consent_join['date_of_birth_child'])
 him_consent_join['date_of_birth_child'] = him_consent_join['date_of_birth_child'].dt.strftime("%d%b%Y")
@@ -334,6 +357,7 @@ him_consent_list = him_consent_join.values.tolist()
 # %%
 ## iterate through old file names and rename, add new names to blank list
 him_newnames_list = []
+him_ids_list = []
 for ind in him_consent_list:
     oldfilename = ind[8]
     record_id = ind[0]
@@ -348,10 +372,12 @@ for ind in him_consent_list:
     newname = str(sign_date)+"_"+str(name)+"_"+str(dob)+".pdf"
     os.rename(DATA_DIR + str(oldfilename), DATA_DIR + str(newname))
     him_newnames_list.append(newname)
+    him_ids_list.append(record_id)
 
-him_newnames_df = pandas.DataFrame({'newname': him_newnames_list})
-him_consent_join = him_consent_join.join(him_newnames_df)
-him_consent_list = him_consent_join.values.tolist()
+him_newnames_df = pandas.DataFrame({'record_id': him_ids_list, 'newname': him_newnames_list})
+#him_consent_join = him_consent_join.reset_index(drop=True)
+him_consent_join2 = pandas.merge(him_consent_join, him_newnames_df, on='record_id', how='outer')
+him_consent_list = him_consent_join2.values.tolist()
 
 # %%
 ### import renamed consent files into copy of R4
@@ -435,7 +461,6 @@ print(str(r.content))
 
 #%% Update date file with latest run time
 
-write_file('run_history.log', print_time())
 
 # find differences between R4 and copy records
 list(set(R4_exportIDs) - set(R4copy_exportIDs))
