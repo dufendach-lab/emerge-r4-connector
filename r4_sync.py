@@ -238,7 +238,7 @@ R4_short_df4 = R4_fullexport_df.loc[601:800]
 R4_short_df5 = R4_fullexport_df.loc[801:1000]
 R4_short_df6 = R4_fullexport_df.loc[1001:1200]
 R4_short_df7 = R4_fullexport_df.loc[1201:1400]
-R4_short_df8 = R4_fullexport_df.loc[1401:1667]
+R4_short_df8 = R4_fullexport_df.loc[1401:1913]
 R4_short_string1 = R4_short_df1.to_json(orient='records')
 R4_short_string2 = R4_short_df2.to_json(orient='records')
 R4_short_string3 = R4_short_df3.to_json(orient='records')
@@ -451,7 +451,7 @@ fields = {
     'type': 'flat',
     'overwriteBehavior': 'normal',
     'forceAutoNumber': 'false',
-    'data': R4_edited_string,
+    'data': R4_short_string8,
     'returnContent': 'count',
     'returnFormat': 'json'
 }
