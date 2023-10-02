@@ -231,24 +231,14 @@ R4_fullexport_string = r.content.decode("utf-8")
 R4_fullexport_dict = json.loads(R4_fullexport_string)
 R4_fullexport_df = pandas.DataFrame(R4_fullexport_dict)
 R4_fullexport_df = R4_fullexport_df.loc[:, ~R4_fullexport_df.columns.str.contains('timestamp')]
-#R4_short_df1 = R4_fullexport_df.loc[0:200]
-#R4_short_df2 = R4_fullexport_df.loc[201:400]
-#R4_short_df3 = R4_fullexport_df.loc[401:600]
-#R4_short_df4 = R4_fullexport_df.loc[601:800]
-#R4_short_df5 = R4_fullexport_df.loc[801:1000]
-#R4_short_df6 = R4_fullexport_df.loc[1001:1200]
-#R4_short_df7 = R4_fullexport_df.loc[1201:1400]
-#R4_short_df8 = R4_fullexport_df.loc[1401:1913]
-#R4_short_string1 = R4_short_df1.to_json(orient='records')
-#R4_short_string2 = R4_short_df2.to_json(orient='records')
-#R4_short_string3 = R4_short_df3.to_json(orient='records')
-#R4_short_string4 = R4_short_df4.to_json(orient='records')
-#R4_short_string5 = R4_short_df5.to_json(orient='records')
-#R4_short_string6 = R4_short_df6.to_json(orient='records')
-#R4_short_string7 = R4_short_df7.to_json(orient='records')
-#R4_short_string8 = R4_short_df8.to_json(orient='records')
+# R4_edited_string = R4_fullexport_df.to_json(orient='records')
+R4_split_df1 = R4_fullexport_df.loc[0:800]
+R4_split_df2 = R4_fullexport_df.loc[801:1600]
+R4_split_df3 = R4_fullexport_df.loc[1601:2400]
+R4_split_string1 = R4_split_df1.to_json(orient='records')
+R4_split_string2 = R4_split_df2.to_json(orient='records')
+R4_split_string3 = R4_split_df3.to_json(orient='records')
 
-R4_edited_string = R4_fullexport_df.to_json(orient='records')
 # %%
 ### create list of file fields that need to be exported + copied over
 file_field_list = ['record_id','pdf_file','broad_import_pdf',
@@ -451,7 +441,7 @@ fields = {
     'type': 'flat',
     'overwriteBehavior': 'normal',
     'forceAutoNumber': 'false',
-    'data': R4_edited_string,
+    'data': R4_split_string3,
     'returnContent': 'count',
     'returnFormat': 'json'
 }
