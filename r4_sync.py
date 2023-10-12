@@ -59,6 +59,7 @@ def get_r4_records():
         'dateRangeBegin': '2010-01-01 00:00:00',
         'dateRangeEnd': ''
     }
+    print('get_r4_records')
     r = requests.post(cfg.config['R4_api_url'], data=data, verify=USE_SSH, timeout=None, headers=headers)
     print('HTTP Status: ' + str(r.status_code))
     ### store data from request
@@ -90,6 +91,7 @@ def get_cchmc_records():
         'dateRangeBegin': '2000-01-01 00:00:00',
         'dateRangeEnd': ''
     }
+    print('get_cchmc_records')
     r = requests.post(cfg.config['R4copy_api_url'], data=data, verify=USE_SSH)
     print('HTTP Status: ' + str(r.status_code))
     ### store data from request
@@ -128,6 +130,7 @@ def create_records(to_add, to_add_json):
             'returnContent': 'count',
             'returnFormat': 'json'
         }
+        print('create_records')
         create_records_r = requests.post(cfg.config['R4copy_api_url'], data=fields)
         return 'HTTP Status: ' + str(create_records_r.status_code)
 
@@ -142,6 +145,7 @@ def delete_records(to_delete, to_delete_json):
             'records[]': to_delete_json,
             'returnFormat': 'json'
         }
+        print('delete_records')
         delete_records_r = requests.post(cfg.config['R4copy_api_url'], data=fields)
         return 'HTTP Status: ' + str(delete_records_r.status_code)
 
@@ -220,6 +224,7 @@ def r4_pull(time):
         'dateRangeBegin': time,
         'dateRangeEnd': ''
     }
+    print('r4_pull')
     r4_pull_r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH, timeout=None)
     print('HTTP Status: ' + str(r4_pull_r.status_code))
     return r4_pull_r
@@ -274,7 +279,7 @@ filtered_files_eav = identify_files(R4_fullexport_df)
 
 # %%
 ### separate into consent files and non-consent files
-def export_rename_consent(files_data):
+def export_consent_files(filtered_files_eav):
     consent_files = filtered_files_eav[filtered_files_eav.field == 'completed_signed_consent']
     consent_files_list = consent_files.values.tolist()
     him_filename_fields = ['record_id', 'age', 'name_of_participant_part1',
@@ -289,8 +294,8 @@ def export_rename_consent(files_data):
     him_consent_join = pandas.merge(him_filtered, consent_files, on='record_id')
     ### remove whitespace and special characters from participant names
     him_consent_join['name_of_participant_part1'] = him_consent_join['name_of_participant_part1'].str.replace('\W', '')
-    him_lasttime = pandas.to_datetime(last_time)
-    him_lasttime = him_lasttime.replace(hour=0, minute=0, second=0)
+    #him_lasttime = pandas.to_datetime(last_time)
+    #him_lasttime = him_lasttime.replace(hour=0, minute=0, second=0)
     him_consent_join['date_consent_cchmc_pp_2'] = pandas.to_datetime(him_consent_join['date_consent_cchmc_pp_2'])
     him_consent_join['date_p2_consent_cchmc'] = pandas.to_datetime(him_consent_join['date_p2_consent_cchmc'])
     him_consent_join = him_consent_join.loc[(him_consent_join['date_consent_cchmc_pp_2'] >= last_time) | (
@@ -309,45 +314,56 @@ def export_rename_consent(files_data):
             'event': '',
             'returnFormat': 'json'
         }
+        print('export_consent_files')
         r = requests.post(cfg.config['R4_api_url'], data=data, verify=USE_SSH, timeout=None)
         print('HTTP Status: ' + str(r.status_code))
         with open(DATA_DIR + str(filename), 'wb') as f:
             f.write(r.content)
             f.close()
-        ### reformat dates
-        him_consent_join['date_consent_cchmc_pp_2'] = him_consent_join['date_consent_cchmc_pp_2'].dt.strftime("%d%b%Y")
-        him_consent_join['date_p2_consent_cchmc'] = him_consent_join['date_p2_consent_cchmc'].dt.strftime("%d%b%Y")
-        him_consent_join['date_of_birth_child'] = pandas.to_datetime(him_consent_join['date_of_birth_child'])
-        him_consent_join['date_of_birth_child'] = him_consent_join['date_of_birth_child'].dt.strftime("%d%b%Y")
-        him_consent_join['date_of_birth'] = pandas.to_datetime(him_consent_join['date_of_birth'])
-        him_consent_join['date_of_birth'] = him_consent_join['date_of_birth'].dt.strftime("%d%b%Y")
-        ### convert to list
-        him_consent_list = him_consent_join.values.tolist()
-        ## iterate through old file names and rename, add new names to blank list
-        him_newnames_list = []
-        him_ids_list = []
-        for ind in him_consent_list:
-            oldfilename = ind[8]
-            record_id = ind[0]
-            age = ind[1]
-            name = ind[2]
-            if age < 18:
-                sign_date = ind[3]
-                dob = ind[5]
-            else:
-                sign_date = ind[4]
-                dob = ind[6]
-            newname = str(sign_date) + "_" + str(name) + "_" + str(dob) + ".pdf"
-            os.rename(DATA_DIR + str(oldfilename), DATA_DIR + str(newname))
-            him_newnames_list.append(newname)
-            him_ids_list.append(record_id)
-        him_newnames_df = pandas.DataFrame({'record_id': him_ids_list, 'newname': him_newnames_list})
-        # him_consent_join = him_consent_join.reset_index(drop=True)
-        him_consent_join2 = pandas.merge(him_consent_join, him_newnames_df, on='record_id', how='outer')
-        him_consent_list = him_consent_join2.values.tolist()
-        return him_consent_list
+    return him_consent_join
 
-him_consent_list = export_rename_consent(filtered_files_eav)
+him_consent_join = export_consent_files(filtered_files_eav)
+
+def rename_consent_files(him_consent_join):
+    ### reformat dates
+    him_consent_join['date_consent_cchmc_pp_2'] = him_consent_join['date_consent_cchmc_pp_2'].dt.strftime("%d%b%Y")
+    him_consent_join['date_p2_consent_cchmc'] = him_consent_join['date_p2_consent_cchmc'].dt.strftime("%d%b%Y")
+    him_consent_join['date_of_birth_child'] = pandas.to_datetime(him_consent_join['date_of_birth_child'])
+    him_consent_join['date_of_birth_child'] = him_consent_join['date_of_birth_child'].dt.strftime("%d%b%Y")
+    him_consent_join['date_of_birth'] = pandas.to_datetime(him_consent_join['date_of_birth'])
+    him_consent_join['date_of_birth'] = him_consent_join['date_of_birth'].dt.strftime("%d%b%Y")
+
+    ### convert to list
+    him_consent_list = him_consent_join.values.tolist()
+
+    ## iterate through old file names and rename, add new names to blank list
+    him_newnames_list = []
+    him_ids_list = []
+    for ind in him_consent_list:
+        oldfilename = ind[8]
+        record_id = ind[0]
+        age = ind[1]
+        name = ind[2]
+        if age < 18:
+            sign_date = ind[3]
+            dob = ind[5]
+        else:
+            sign_date = ind[4]
+            dob = ind[6]
+        newname = str(sign_date) + "_" + str(name) + "_" + str(dob) + ".pdf"
+        os.rename(DATA_DIR + str(oldfilename), DATA_DIR + str(newname))
+        him_newnames_list.append(newname)
+        him_ids_list.append(record_id)
+
+    him_newnames_df = pandas.DataFrame({'record_id': him_ids_list, 'newname': him_newnames_list})
+    # him_consent_join = him_consent_join.reset_index(drop=True)
+    him_consent_join2 = pandas.merge(him_consent_join, him_newnames_df, on='record_id', how='outer')
+    him_consent_list = him_consent_join2.values.tolist()
+
+    return him_consent_list
+
+
+him_consent_list = rename_consent_files(him_consent_join)
 
 
 def import_renamed_consent(list_consent_files):
@@ -364,6 +380,7 @@ def import_renamed_consent(list_consent_files):
                 'returnFormat': 'json'
             }
             with open((DATA_DIR + str(filename)), 'rb') as f:
+                print('import_renamed_consent')
                 r = requests.post(cfg.config['R4copy_api_url'], data=data, files={'file': f}, timeout=None)
                 f.close()
                 print('HTTP Status: ' + str(r.status_code))
@@ -373,6 +390,7 @@ import_renamed_consent(him_consent_list)
 
 
 nonconsent_files = filtered_files_eav[filtered_files_eav.field != 'completed_signed_consent']
+
 ### convert EAV to a list that the "for" loop below can iterate through
 nonconsent_files_list = nonconsent_files.values.tolist()
 ### export non-consent PDF files from R4 to local folder
@@ -390,12 +408,15 @@ def export_nonconsent_files(nonconsent_files_list):
             'event': '',
             'returnFormat': 'json'
         }
+        print('export_nonconsent_files')
         r = requests.post(cfg.config['R4_api_url'],data=data,verify=False, timeout=None)
         print('HTTP Status: ' + str(r.status_code))
         with open(DATA_DIR + str(filename), 'wb') as f:
             f.write(r.content)
             f.close()
 
+
+export_nonconsent_files(nonconsent_files_list)
 
 # %%
 ### import non-consent files into copy of R4
@@ -412,6 +433,7 @@ def import_nonconsent(nonconsent_files_list):
             'returnFormat': 'json'
         }
         with open((DATA_DIR + str(filename)), 'rb') as f:
+            print('import_nonconsent')
             r=requests.post(cfg.config['R4copy_api_url'], data=data, files={'file':f}, verify=USE_SSH, timeout=None)
             f.close()
             print('HTTP Status: ' + str(r.status_code))
@@ -439,13 +461,17 @@ def cchmc_field_import(data_import):
         'returnContent': 'count',
         'returnFormat': 'json'
     }
-    r = requests.post(cfg.config['R4copy_api_url'],data=fields, verify=USE_SSH, timeout=None)
+    print('cchmc_field_import')
+    try:
+        r = requests.post(cfg.config['R4copy_api_url'],data=fields, verify=USE_SSH, timeout=None)
+    except Exception as e:
+        print('cchmc_field_import did not succeed because ' + e)
+
     print('HTTP Status: ' + str(r.status_code))
     print(str(r.content))
 
 
 cchmc_field_import(R4_edited_string)
-#%% Update date file with latest run time
 
 
 # find differences between R4 and copy records
