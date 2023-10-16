@@ -59,6 +59,7 @@ def get_r4_records():
         'dateRangeBegin': '2010-01-01 00:00:00',
         'dateRangeEnd': ''
     }
+    print('get_r4_records')
     r = requests.post(cfg.config['R4_api_url'], data=data, verify=USE_SSH, timeout=None, headers=headers)
     print('HTTP Status: ' + str(r.status_code))
     ### store data from request
@@ -90,6 +91,7 @@ def get_cchmc_records():
         'dateRangeBegin': '2000-01-01 00:00:00',
         'dateRangeEnd': ''
     }
+    print('get_cchmc_records')
     r = requests.post(cfg.config['R4copy_api_url'], data=data, verify=USE_SSH)
     print('HTTP Status: ' + str(r.status_code))
     ### store data from request
@@ -128,6 +130,7 @@ def create_records(to_add, to_add_json):
             'returnContent': 'count',
             'returnFormat': 'json'
         }
+        print('create_records')
         create_records_r = requests.post(cfg.config['R4copy_api_url'], data=fields)
         return 'HTTP Status: ' + str(create_records_r.status_code)
 
@@ -142,6 +145,7 @@ def delete_records(to_delete, to_delete_json):
             'records[]': to_delete_json,
             'returnFormat': 'json'
         }
+        print('delete_records')
         delete_records_r = requests.post(cfg.config['R4copy_api_url'], data=fields)
         return 'HTTP Status: ' + str(delete_records_r.status_code)
 
@@ -220,6 +224,7 @@ def r4_pull(time):
         'dateRangeBegin': time,
         'dateRangeEnd': ''
     }
+    print('r4_pull')
     r4_pull_r = requests.post(cfg.config['R4_api_url'],data=data, verify=USE_SSH, timeout=None)
     print('HTTP Status: ' + str(r4_pull_r.status_code))
     return r4_pull_r
@@ -274,8 +279,8 @@ filtered_files_eav = identify_files(R4_fullexport_df)
 
 # %%
 ### separate into consent files and non-consent files
-def export_consent_files(files_data):
-    consent_files = files_data[files_data.field == 'completed_signed_consent']
+def export_consent_files(filtered_files_eav):
+    consent_files = filtered_files_eav[filtered_files_eav.field == 'completed_signed_consent']
     consent_files_list = consent_files.values.tolist()
     him_filename_fields = ['record_id', 'age', 'name_of_participant_part1',
                            'date_consent_cchmc_pp_2', 'date_p2_consent_cchmc',
@@ -309,6 +314,7 @@ def export_consent_files(files_data):
             'event': '',
             'returnFormat': 'json'
         }
+        print('export_consent_files')
         r = requests.post(cfg.config['R4_api_url'], data=data, verify=USE_SSH, timeout=None)
         print('HTTP Status: ' + str(r.status_code))
         with open(DATA_DIR + str(filename), 'wb') as f:
@@ -374,6 +380,7 @@ def import_renamed_consent(list_consent_files):
                 'returnFormat': 'json'
             }
             with open((DATA_DIR + str(filename)), 'rb') as f:
+                print('import_renamed_consent')
                 r = requests.post(cfg.config['R4copy_api_url'], data=data, files={'file': f}, timeout=None)
                 f.close()
                 print('HTTP Status: ' + str(r.status_code))
@@ -401,6 +408,7 @@ def export_nonconsent_files(nonconsent_files_list):
             'event': '',
             'returnFormat': 'json'
         }
+        print('export_nonconsent_files')
         r = requests.post(cfg.config['R4_api_url'],data=data,verify=False, timeout=None)
         print('HTTP Status: ' + str(r.status_code))
         with open(DATA_DIR + str(filename), 'wb') as f:
@@ -425,6 +433,7 @@ def import_nonconsent(nonconsent_files_list):
             'returnFormat': 'json'
         }
         with open((DATA_DIR + str(filename)), 'rb') as f:
+            print('import_nonconsent')
             r=requests.post(cfg.config['R4copy_api_url'], data=data, files={'file':f}, verify=USE_SSH, timeout=None)
             f.close()
             print('HTTP Status: ' + str(r.status_code))
@@ -452,13 +461,17 @@ def cchmc_field_import(data_import):
         'returnContent': 'count',
         'returnFormat': 'json'
     }
-    r = requests.post(cfg.config['R4copy_api_url'],data=fields, verify=USE_SSH, timeout=None)
+    print('cchmc_field_import')
+    try:
+        r = requests.post(cfg.config['R4copy_api_url'],data=fields, verify=USE_SSH, timeout=None)
+    except Exception as e:
+        print('cchmc_field_import did not succeed because ' + e)
+
     print('HTTP Status: ' + str(r.status_code))
     print(str(r.content))
 
 
 cchmc_field_import(R4_edited_string)
-#%% Update date file with latest run time
 
 
 # find differences between R4 and copy records
