@@ -7,7 +7,7 @@ import requests
 import pandas
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from pathlib import Path
 
@@ -39,6 +39,9 @@ def get_last_runtime():
 
 last_time = get_last_runtime()
 print("last runtime:", last_time)
+diff = pandas.to_datetime(last_time) - timedelta(days=1)
+diff = diff.strftime('%Y-%m-%d')
+new_lasttime = str(diff)
 # %%
 ### EXPORT existing records from R4/source REDCap
 def get_r4_records():
@@ -297,8 +300,8 @@ def export_consent_files(filtered_files_eav):
     #him_lasttime = him_lasttime.replace(hour=0, minute=0, second=0)
     him_consent_join['date_consent_cchmc_pp_2'] = pandas.to_datetime(him_consent_join['date_consent_cchmc_pp_2'])
     him_consent_join['date_p2_consent_cchmc'] = pandas.to_datetime(him_consent_join['date_p2_consent_cchmc'])
-    him_consent_join = him_consent_join.loc[(him_consent_join['date_consent_cchmc_pp_2'] >= last_time) | (
-                him_consent_join['date_p2_consent_cchmc'] >= last_time)]
+    him_consent_join = him_consent_join.loc[(him_consent_join['date_consent_cchmc_pp_2'] >= new_lasttime) | (
+                him_consent_join['date_p2_consent_cchmc'] >= new_lasttime)]
     him_consent_first_list = him_consent_join.values.tolist()
     for ind in him_consent_first_list:
         record_id = ind[0]
