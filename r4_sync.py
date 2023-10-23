@@ -476,6 +476,3 @@ def cchmc_field_import(data_import):
 cchmc_field_import(R4_edited_string)
 
 write_file('run_history.log', new_runtime)
-
-# find differences between R4 and copy records
-# list(set(R4_exportIDs) - set(R4copy_exportIDs))
