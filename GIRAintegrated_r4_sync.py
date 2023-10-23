@@ -290,7 +290,7 @@ def get_gira_export_fields():
     #concat_gira['date_gira_generated'] = pandas.to_datetime(concat_gira['date_gira_generated']).dt.date
     concat_gira['Difference'] = (datetime.today() - concat_gira['date_gira_generated'])
     concat_gira["Difference"] = (concat_gira["Difference"]).dt.days
-    gira_uploads = concat_gira[((concat_gira['Difference'] >= 2) & (concat_gira['date_gira_disclosed'] == '')) | (concat_gira['date_gira_disclosed'] >= last_time)]
+    gira_uploads = concat_gira[((concat_gira['Difference'] >= 28) & (concat_gira['date_gira_disclosed'] == '')) | (concat_gira['date_gira_disclosed'] >= last_time)]
     return gira_uploads
 
 
@@ -721,7 +721,8 @@ def create_gira_message(gira_message_list):
             "content": [{
                 "attachment": {
                     "contentType": "application/pdf",
-                    "data": base64_message,
+                    "data": 'test message',
+                    #"data": base64_message,
                     "title": "Genome Informed Risk Assessment"
                 }
             }],
@@ -757,18 +758,19 @@ def create_gira_message(gira_message_list):
                      }
                 ]
         }
-    print(message_json)
+        print(message_json)
+        # headers = {
+        #    'Content-Type': 'application/json'
+        # }
+        # url = "https://llmirthuat02:40010/fhir/"
+        # payload = message_json
+        # r = requests.post(url, headers=headers, data=payload,
+        #              verify='/Users/casjk8/Documents/llmirthuat02.pem', auth=('eMerge', 'eMerge'))
+        # print(r.text)
 
 
 create_gira_message(gira_message_list)
 
-    #headers = {
-    #    'Content-Type': 'application/json'
-    #}
-    #url = "https://llmirthuat02:40010/fhir/"
-    #payload = message_json
-    #r = requests.post(url, headers=headers, data=payload,
-    #              verify='/Users/casjk8/Documents/llmirthuat02.pem', auth=('eMerge', 'eMerge'))
-    #print(r.text)
+
 
 write_file('run_history.log', new_runtime)
