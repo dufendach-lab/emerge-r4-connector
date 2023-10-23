@@ -1,5 +1,10 @@
 /config/api_config.py
 __pycache__
 /data
-
 run_history.log
+/config/keys_config.cfg
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+ **/.idea/workspace.xml
+
+
