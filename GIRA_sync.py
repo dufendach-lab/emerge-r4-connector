@@ -215,6 +215,8 @@ def get_gira_message_fields():
     gira_message_fields = ['record_id', 'gira_pdf','name_of_participant_part1', 'date_of_birth_child',
                            'date_of_birth', 'sex_at_birth', 'gira_report_id', 'date_gira_generated', 'age']
     gira_message_df = R4_fullexport_df[gira_message_fields]
+    gira_message_df['sex_at_birth'].replace('1', 'female', inplace=True)
+    gira_message_df['sex_at_birth'].replace('2', 'male', inplace=True)
     #gira_message_df['record_id'] = gira_message_df['record_id'].astype('int64')
     #gira_uploads['record_id'] = gira_uploads['record_id'].astype('int64')
     gira_message_df['date_gira_generated'] = pandas.to_datetime(gira_message_df['date_gira_generated'])
@@ -249,7 +251,7 @@ def create_gira_message(gira_message_list):
         filename = ind[3]
         name = ind[5]
         age = ind[10]
-        mrn = ind[11]
+        mrn = ind[14]
         if int(age) < 18:
             dob = ind[6]
         else:
@@ -278,7 +280,7 @@ def create_gira_message(gira_message_list):
                 "family": name.split()[1],
                 "given": [name.split()[0]]
             }],
-            "birthDate": "1974-12-25",
+            "birthDate": dob,
             "gender": sex
         }
         org_hosp_json = {
@@ -381,7 +383,7 @@ def create_gira_message(gira_message_list):
                 "attachment": {
                     "contentType": "application/pdf",
                     "data": 'test message',
-                    #"data": base64_message,
+                    #data": base64_message,
                     "title": "Genome Informed Risk Assessment"
                 }
             }],
@@ -417,15 +419,15 @@ def create_gira_message(gira_message_list):
                      }
                 ]
         }
-        print(message_json)
-        # headers = {
-        #    'Content-Type': 'application/json'
-        # }
-        # url = "https://llmirthuat02:40010/fhir/"
-        # payload = message_json
-        # r = requests.post(url, headers=headers, data=payload,
-        #              verify='/Users/casjk8/Documents/llmirthuat02.pem', auth=('eMerge', 'eMerge'))
-        # print(r.text)
+        #print(message_json)
+        headers = {
+           'Content-Type': 'application/json'
+        }
+        url = "https://interfaceuat:40010/fhir/"
+        payload = message_json
+        r = requests.post(url, headers=headers, data=payload,
+                          verify='/Users/casjk8/Downloads/emerge.mirth.fhir.hl7.cer', auth=('eMerge', 'eMerge'))
+        print(r.text)
 
 
 create_gira_message(gira_message_list)

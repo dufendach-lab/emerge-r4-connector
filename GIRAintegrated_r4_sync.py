@@ -185,41 +185,43 @@ def r4_pull(time):
         'type': 'flat',
         'csvDelimiter': '',
         'forms[0]': 'prescreening_survey',
-        'forms[1]': 'transition_page',
-        'forms[2]': 'primary_consent',
-        'forms[3]': 'cchmc_consent_part_2',
-        'forms[4]': 'cchmc_consent_parent_permission',
-        'forms[5]': 'end_of_consent_transition',
-        'forms[6]': 'baseline_survey_adult',
-        'forms[7]': 'baseline_survey_child',
-        'forms[8]': 'pre_ror_adult',
-        'forms[9]': 'pre_ror_child',
-        'forms[10]': 'pre_ror_transition',
-        'forms[11]': 'adverse_events',
-        'forms[12]': 'study_withdrawal',
-        'forms[13]': 'consent_upload',
-        'forms[14]': 'notes',
-        'forms[15]': 'mono_sample',
-        'forms[16]': 'broad_ordering',
-        'forms[17]': 'metree_import',
-        'forms[18]': 'family_relationships',
-        'forms[19]': 'completed_signed_consent',
-        'forms[20]': 'admin_form',
-        'forms[22]': 'unified_variables',
-        'forms[23]': 'r4_metree_result',
-        'forms[24]': 'r4_invitae_result',
-        'forms[25]': 'r4_broad_result',
-        'forms[26]': 'gira_clinical_variables',
-        'forms[27]': 'invitae_import',
-        'forms[28]': 'module_variables',
-        'forms[29]': 'gira_review',
-        'forms[30]': 'staged_gira',
-        'forms[31]': 'gira_reports',
-        'forms[32]': 'ror',
-        'forms[33]': 'postror_child',
-        'forms[34]': 'postror_adult',
-        'forms[35]': 'adult_fhh_rescue',
-        'forms[36]': 'pediatric_fhh_rescue',
+        'forms[1]': 'gira_reports',
+        'forms[2]': 'ror',
+        # 'forms[1]': 'transition_page',
+        # 'forms[2]': 'primary_consent',
+        # 'forms[3]': 'cchmc_consent_part_2',
+        # 'forms[4]': 'cchmc_consent_parent_permission',
+        # 'forms[5]': 'end_of_consent_transition',
+        # 'forms[6]': 'baseline_survey_adult',
+        # 'forms[7]': 'baseline_survey_child',
+        # 'forms[8]': 'pre_ror_adult',
+        # 'forms[9]': 'pre_ror_child',
+        # 'forms[10]': 'pre_ror_transition',
+        # 'forms[11]': 'adverse_events',
+        # 'forms[12]': 'study_withdrawal',
+        # 'forms[13]': 'consent_upload',
+        # 'forms[14]': 'notes',
+        # 'forms[15]': 'mono_sample',
+        # 'forms[16]': 'broad_ordering',
+        # 'forms[17]': 'metree_import',
+        # 'forms[18]': 'family_relationships',
+        # 'forms[19]': 'completed_signed_consent',
+        # 'forms[20]': 'admin_form',
+        # 'forms[22]': 'unified_variables',
+        # 'forms[23]': 'r4_metree_result',
+        # 'forms[24]': 'r4_invitae_result',
+        # 'forms[25]': 'r4_broad_result',
+        # 'forms[26]': 'gira_clinical_variables',
+        # 'forms[27]': 'invitae_import',
+        # 'forms[28]': 'module_variables',
+        # 'forms[29]': 'gira_review',
+        # 'forms[30]': 'staged_gira',
+        # 'forms[31]': 'gira_reports',
+        # 'forms[32]': 'ror',
+        # 'forms[33]': 'postror_child',
+        # 'forms[34]': 'postror_adult',
+        # 'forms[35]': 'adult_fhh_rescue',
+        # 'forms[36]': 'pediatric_fhh_rescue',
         'rawOrLabel': 'raw',
         'rawOrLabelHeaders': 'raw',
         'exportCheckboxLabel': 'false',
@@ -416,7 +418,7 @@ def export_gira_files(gira_files_list):
         field = gira[1]
         filename = gira[2]
         data = {
-            'token': cfg.config['R4_api_token'],
+            'token': cfg.config['test_project_token'],
             'content': 'file',
             'action': 'export',
             'record': record_id,
@@ -424,8 +426,8 @@ def export_gira_files(gira_files_list):
             'event': '',
             'returnFormat': 'json'
         }
-        print('import_gira_files')
-        r = requests.post(cfg.config['R4copy_api_url'], data=data, verify=USE_SSH, timeout=None)
+        print('export_gira_files')
+        r = requests.post(cfg.config['test_project_url'], data=data, verify=USE_SSH, timeout=None)
         print('HTTP Status: ' + str(r.status_code))
         with open(GIRA_DIR + str(filename), 'wb') as f:
             f.write(r.content)
@@ -433,7 +435,6 @@ def export_gira_files(gira_files_list):
 
 
 export_gira_files(gira_files_list)
-
 def import_gira_files(gira_files_list):
     for gira in gira_files_list:
         record_id = gira[0]
@@ -493,8 +494,10 @@ def get_gira_message_fields():
     gira_message_fields = ['record_id', 'gira_pdf','name_of_participant_part1', 'date_of_birth_child',
                            'date_of_birth', 'sex_at_birth', 'gira_report_id', 'date_gira_generated', 'age']
     gira_message_df = R4_fullexport_df[gira_message_fields]
-    gira_message_df['record_id'] = gira_message_df['record_id'].astype('int64')
-    gira_uploads['record_id'] = gira_uploads['record_id'].astype('int64')
+    gira_message_df['sex_at_birth'].replace('1', 'female', inplace=True)
+    gira_message_df['sex_at_birth'].replace('2', 'male', inplace=True)
+    #gira_message_df['record_id'] = gira_message_df['record_id'].astype('int64')
+    #gira_uploads['record_id'] = gira_uploads['record_id'].astype('int64')
     gira_message_df['date_gira_generated'] = pandas.to_datetime(gira_message_df['date_gira_generated'])
     gira_message_df = gira_message_df.groupby('record_id').agg(
         {'gira_pdf':'last', 'name_of_participant_part1':'first', 'gira_pdf': 'last',
@@ -503,7 +506,7 @@ def get_gira_message_fields():
          'age': 'first'}).reset_index()
     gira_message_df = gira_message_df[gira_message_df['gira_pdf'] != '']
     filtered_gira_message = pandas.merge(gira_uploads, gira_message_df, how='left', on=['record_id', 'gira_pdf', 'date_gira_generated'])
-    final_gira_message = pandas.merge(filtered_gira_message, prows_mrn_df, how='left', left_on='record_id', right_on='record_id1')
+    final_gira_message = pandas.merge(filtered_gira_message, prows_mrn_df, how='left', left_on='record_id', right_on='record_id')
     gira_message_list = final_gira_message.values.tolist()
     return gira_message_list
 
@@ -612,7 +615,7 @@ def create_gira_message(gira_message_list):
         filename = ind[3]
         name = ind[5]
         age = ind[10]
-        mrn = ind[11]
+        mrn = ind[14]
         if int(age) < 18:
             dob = ind[6]
         else:
@@ -641,7 +644,7 @@ def create_gira_message(gira_message_list):
                 "family": name.split()[1],
                 "given": [name.split()[0]]
             }],
-            "birthDate": "1974-12-25",
+            "birthDate": dob,
             "gender": sex
         }
         org_hosp_json = {
@@ -744,7 +747,7 @@ def create_gira_message(gira_message_list):
                 "attachment": {
                     "contentType": "application/pdf",
                     "data": 'test message',
-                    #"data": base64_message,
+                    #data": base64_message,
                     "title": "Genome Informed Risk Assessment"
                 }
             }],
@@ -780,15 +783,15 @@ def create_gira_message(gira_message_list):
                      }
                 ]
         }
-        print(message_json)
-        # headers = {
-        #    'Content-Type': 'application/json'
-        # }
-        # url = "https://llmirthuat02:40010/fhir/"
-        # payload = message_json
-        # r = requests.post(url, headers=headers, data=payload,
-        #              verify='/Users/casjk8/Documents/llmirthuat02.pem', auth=('eMerge', 'eMerge'))
-        # print(r.text)
+        #print(message_json)
+        headers = {
+           'Content-Type': 'application/json'
+        }
+        url = "https://interfaceuat:40010/fhir/"
+        payload = message_json
+        r = requests.post(url, headers=headers, data=payload,
+                          verify='/Users/casjk8/Downloads/emerge.mirth.fhir.hl7.cer', auth=('eMerge', 'eMerge'))
+        print(r.text)
 
 
 create_gira_message(gira_message_list)
