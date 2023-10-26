@@ -279,6 +279,24 @@ def identify_files(all_data):
 
 filtered_files_eav = identify_files(R4_fullexport_df)
 
+def get_gira_export_fields():
+    gira_date_list = ['record_id', 'gira_pdf','date_gira_disclosed', 'date_gira_generated' ]
+    gira_date_df = R4_fullexport_df[gira_date_list]
+    concat_gira = gira_date_df.groupby('record_id').agg({'date_gira_generated':'last', 'date_gira_disclosed':'first', 'gira_pdf': 'last'}).reset_index()
+    concat_gira = concat_gira[concat_gira.date_gira_generated != '']
+    concat_gira['date_gira_generated'] = pandas.to_datetime(concat_gira['date_gira_generated'])
+    #concat_gira['date_gira_generated'] = pandas.to_datetime(concat_gira['date_gira_generated']).dt.date
+    concat_gira['Difference'] = (datetime.today() - concat_gira['date_gira_generated'])
+    concat_gira["Difference"] = (concat_gira["Difference"]).dt.days
+    gira_uploads = concat_gira[((concat_gira['Difference'] >= 28) & (concat_gira['date_gira_disclosed'] == '')) | (concat_gira['date_gira_disclosed'] >= last_time)]
+    return gira_uploads
+
+
+gira_uploads = get_gira_export_fields()
+gira_eav = pandas.melt(gira_uploads, id_vars=['record_id'], var_name='field', value_name='file_name')
+gira_eav = gira_eav.loc[(gira_eav['field'] == 'gira_pdf')]
+gira_files_list = gira_eav.values.tolist()
+
 # %%
 ### separate into consent files and non-consent files
 def export_consent_files(filtered_files_eav):
@@ -390,6 +408,51 @@ def import_renamed_consent(list_consent_files):
 
 import_renamed_consent(him_consent_list)
 
+def export_gira_files(gira_files_list):
+    for gira in gira_files_list:
+        record_id = gira[0]
+        field = gira[1]
+        filename = gira[2]
+        data = {
+            'token': cfg.config['R4_api_token'],
+            'content': 'file',
+            'action': 'export',
+            'record': record_id,
+            'field': field,
+            'event': '',
+            'returnFormat': 'json'
+        }
+        print('export_gira_files')
+        r = requests.post(cfg.config['R4_api_url'], data=data, verify=USE_SSH, timeout=None)
+        print('HTTP Status: ' + str(r.status_code))
+        with open(GIRA_DIR + str(filename), 'wb') as f:
+            f.write(r.content)
+            f.close()
+#%%
+export_gira_files(gira_files_list)
+#%%
+def import_gira_files(gira_files_list):
+    for gira in gira_files_list:
+        record_id = gira[0]
+        field = gira[1]
+        filename = gira[2]
+        data = {
+            'token': cfg.config['R4copy_api_token'],
+            'content': 'file',
+            'action': 'import',
+            'record': record_id,
+            'field': field,
+            'event': '',
+            'returnFormat': 'json'
+        }
+        with open((GIRA_DIR + str(filename)), 'rb') as f:
+            print('import_gira_files')
+            r = requests.post(cfg.config['R4copy_api_url'], data=data, files={'file': f}, timeout=None)
+            f.close()
+            print('HTTP Status: ' + str(r.status_code))
+
+
+import_gira_files(gira_files_list)
 
 nonconsent_files = filtered_files_eav[filtered_files_eav.field != 'completed_signed_consent']
 

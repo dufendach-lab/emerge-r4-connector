@@ -424,8 +424,8 @@ def export_gira_files(gira_files_list):
             'event': '',
             'returnFormat': 'json'
         }
-        print('export_gira_files')
-        r = requests.post(cfg.config['R4_api_url'], data=data, verify=USE_SSH, timeout=None)
+        print('import_gira_files')
+        r = requests.post(cfg.config['R4copy_api_url'], data=data, verify=USE_SSH, timeout=None)
         print('HTTP Status: ' + str(r.status_code))
         with open(GIRA_DIR + str(filename), 'wb') as f:
             f.write(r.content)
@@ -434,6 +434,28 @@ def export_gira_files(gira_files_list):
 
 export_gira_files(gira_files_list)
 
+def import_gira_files(gira_files_list):
+    for gira in gira_files_list:
+        record_id = gira[0]
+        field = gira[1]
+        filename = gira[2]
+        data = {
+            'token': cfg.config['R4copy_api_token'],
+            'content': 'file',
+            'action': 'import',
+            'record': record_id,
+            'field': field,
+            'event': '',
+            'returnFormat': 'json'
+        }
+        with open((GIRA_DIR + str(filename)), 'rb') as f:
+            print('import_gira_files')
+            r = requests.post(cfg.config['R4copy_api_url'], data=data, files={'file': f}, timeout=None)
+            f.close()
+            print('HTTP Status: ' + str(r.status_code))
+
+
+import_gira_files(gira_files_list)
 # pull MRN from enrollment tracking REDCap project
 def get_mrns():
     data = {
