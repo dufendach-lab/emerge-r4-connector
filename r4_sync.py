@@ -18,6 +18,8 @@ from config import api_config as cfg;
 ### Constants
 USE_SSH = False
 DATA_DIR = "./data/"
+GIRA_DIR = "./gira_files/"
+#the below code was an attempt to fix connection issues to R4, before we found out the issue was on R4's side
 headers = requests.utils.default_headers()
 headers.update(
     {

@@ -215,8 +215,8 @@ def get_gira_message_fields():
     gira_message_fields = ['record_id', 'gira_pdf','name_of_participant_part1', 'date_of_birth_child',
                            'date_of_birth', 'sex_at_birth', 'gira_report_id', 'date_gira_generated', 'age']
     gira_message_df = R4_fullexport_df[gira_message_fields]
-    gira_message_df['sex_at_birth'].replace('1', 'female', inplace=True)
-    gira_message_df['sex_at_birth'].replace('2', 'male', inplace=True)
+    gira_message_df['sex_at_birth'].replace('1', 'Female', inplace=True)
+    gira_message_df['sex_at_birth'].replace('2', 'Male', inplace=True)
     #gira_message_df['record_id'] = gira_message_df['record_id'].astype('int64')
     #gira_uploads['record_id'] = gira_uploads['record_id'].astype('int64')
     gira_message_df['date_gira_generated'] = pandas.to_datetime(gira_message_df['date_gira_generated'])
@@ -371,8 +371,8 @@ def create_gira_message(gira_message_list):
                 },
                     {
                         "system": "urn:oid:2.16.840.1.113883.3.1674",
-                        "code": "1000267",
-                        "display": "External Genetics Report"
+                        "code": "Epic eMERGE",
+                        "display": "Epic eMERGE"
                     }
                 ]
             },

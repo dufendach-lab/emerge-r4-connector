@@ -7,21 +7,24 @@ from datetime import datetime, timedelta
 import base64
 from pathlib import Path
 
-# %%
+# imports the api_config file in the config folder - contains API keys required to run requests
 from config import api_config as cfg;
 
 # %%
 ### Constants
+# turning OFF ssh verification because of security blockages - will likely need to change to pass security review
 USE_SSH = False
+# general directory where all non-GIRA files get exported to
 DATA_DIR = "./data/"
+# directory where GIRA files get exported to
 GIRA_DIR = "./gira_files/"
+#the below code was an attempt to fix connection issues to R4, before we found out the issue was on R4's side
 headers = requests.utils.default_headers()
 headers.update(
     {
         'User-Agent': 'My User Agent 1.0',
     }
 )
-
 ### Get last run time from date file
 def get_last_runtime():
     last_run_file = Path('./run_history.log')
@@ -33,16 +36,16 @@ def get_last_runtime():
         with open(last_run_file, 'r') as f:
             last_runtime = f.readlines()[-1]
     return last_runtime
-
+# if you need to manually run the script/fix a synchronization issue, you'll likely manually set the last_time variable
 last_time = get_last_runtime()
 print("last runtime:", last_time)
+# new_lasttime is calculated for picking up new consent forms, because Python was rounding up the time to the next whole day causing missed data
 diff = pandas.to_datetime(last_time) - timedelta(days=1)
 diff = diff.strftime('%Y-%m-%d')
 new_lasttime = str(diff)
 # %%
-
-# %%
 ### EXPORT existing records from R4/source REDCap
+# the prescreening_survey form contains each participant's record ID, so that's why we only export that form
 def get_r4_records():
     data = {
         'token': cfg.config['R4_api_token'],
@@ -66,8 +69,11 @@ def get_r4_records():
     print('HTTP Status: ' + str(r.status_code))
     ### store data from request
     R4_exportIDs_string = r.content.decode("utf-8")
+    # save as json dict
     R4_exportIDs_dict = json.loads(R4_exportIDs_string)
+    # save as pandas dataframe
     R4_exportIDs_df = pandas.DataFrame(R4_exportIDs_dict)
+    # convert to list of record IDs
     R4_exportIDs = R4_exportIDs_df['record_id'].tolist()
     return R4_exportIDs
 
@@ -101,14 +107,11 @@ def get_cchmc_records():
     R4copy_exportIDs_dict = json.loads(R4copy_exportIDs_string)
     R4copy_exportIDs_df = pandas.DataFrame(R4copy_exportIDs_dict)
     R4copy_exportIDs = R4copy_exportIDs_df['record_id'].tolist()
-    # R4copy_exportIDs = pandas.DataFrame(R4copy_exportIDs, columns=['record_id'])
     return R4copy_exportIDs
 
 
 R4copy_exportIDs = get_cchmc_records()
 
-# %%
-### store data from request
 # %%
 ### calculate differences in IDs between projects
 add_to_R4copy = list(set(R4_exportIDs) - set(R4copy_exportIDs))
@@ -120,6 +123,7 @@ num_delete = len(delete_from_R4copy)
 delete_from_R4copy = numpy.asarray(delete_from_R4copy)
 
 # %%
+#function to add new records to R4 copy
 def create_records(to_add, to_add_json):
     if to_add > 0:
         fields = {
@@ -142,6 +146,7 @@ def create_records(to_add, to_add_json):
 
 create_records(num_add, add_to_R4copy)
 
+# function to remove records from R4 copy (rarely used)
 def delete_records(to_delete, to_delete_json):
     if to_delete > 0:
         fields = {
@@ -158,13 +163,14 @@ def delete_records(to_delete, to_delete_json):
 
 delete_records(num_delete, delete_from_R4copy)
 # %%
+# function to get the current time in correct format that REDCap likes
 def print_time():
     now = datetime.now()
     current_time = now.strftime("%Y-%m-%d %H:%M")
     data = current_time
     return data
 
-
+#function to write a file - used for logging
 def write_file(filename,data):
     if os.path.isfile(filename):
         with open (filename, 'a') as f:
@@ -176,6 +182,7 @@ def write_file(filename,data):
 
 new_runtime = print_time()
 # %%
+# pulls all records modified since the last runtime
 def r4_pull(time):
     data = {
         'token': cfg.config['R4_api_token'],
@@ -185,43 +192,41 @@ def r4_pull(time):
         'type': 'flat',
         'csvDelimiter': '',
         'forms[0]': 'prescreening_survey',
-        'forms[1]': 'gira_reports',
-        'forms[2]': 'ror',
-        # 'forms[1]': 'transition_page',
-        # 'forms[2]': 'primary_consent',
-        # 'forms[3]': 'cchmc_consent_part_2',
-        # 'forms[4]': 'cchmc_consent_parent_permission',
-        # 'forms[5]': 'end_of_consent_transition',
-        # 'forms[6]': 'baseline_survey_adult',
-        # 'forms[7]': 'baseline_survey_child',
-        # 'forms[8]': 'pre_ror_adult',
-        # 'forms[9]': 'pre_ror_child',
-        # 'forms[10]': 'pre_ror_transition',
-        # 'forms[11]': 'adverse_events',
-        # 'forms[12]': 'study_withdrawal',
-        # 'forms[13]': 'consent_upload',
-        # 'forms[14]': 'notes',
-        # 'forms[15]': 'mono_sample',
-        # 'forms[16]': 'broad_ordering',
-        # 'forms[17]': 'metree_import',
-        # 'forms[18]': 'family_relationships',
-        # 'forms[19]': 'completed_signed_consent',
-        # 'forms[20]': 'admin_form',
-        # 'forms[22]': 'unified_variables',
-        # 'forms[23]': 'r4_metree_result',
-        # 'forms[24]': 'r4_invitae_result',
-        # 'forms[25]': 'r4_broad_result',
-        # 'forms[26]': 'gira_clinical_variables',
-        # 'forms[27]': 'invitae_import',
-        # 'forms[28]': 'module_variables',
-        # 'forms[29]': 'gira_review',
-        # 'forms[30]': 'staged_gira',
-        # 'forms[31]': 'gira_reports',
-        # 'forms[32]': 'ror',
-        # 'forms[33]': 'postror_child',
-        # 'forms[34]': 'postror_adult',
-        # 'forms[35]': 'adult_fhh_rescue',
-        # 'forms[36]': 'pediatric_fhh_rescue',
+        'forms[1]': 'transition_page',
+        'forms[2]': 'primary_consent',
+        'forms[3]': 'cchmc_consent_part_2',
+        'forms[4]': 'cchmc_consent_parent_permission',
+        'forms[5]': 'end_of_consent_transition',
+        'forms[6]': 'baseline_survey_adult',
+        'forms[7]': 'baseline_survey_child',
+        'forms[8]': 'pre_ror_adult',
+        'forms[9]': 'pre_ror_child',
+        'forms[10]': 'pre_ror_transition',
+        'forms[11]': 'adverse_events',
+        'forms[12]': 'study_withdrawal',
+        'forms[13]': 'consent_upload',
+        'forms[14]': 'notes',
+        'forms[15]': 'mono_sample',
+        'forms[16]': 'broad_ordering',
+        'forms[17]': 'metree_import',
+        'forms[18]': 'family_relationships',
+        'forms[19]': 'completed_signed_consent',
+        'forms[20]': 'admin_form',
+        'forms[22]': 'unified_variables',
+        'forms[23]': 'r4_metree_result',
+        'forms[24]': 'r4_invitae_result',
+        'forms[25]': 'r4_broad_result',
+        'forms[26]': 'gira_clinical_variables',
+        'forms[27]': 'invitae_import',
+        'forms[28]': 'module_variables',
+        'forms[29]': 'gira_review',
+        'forms[30]': 'staged_gira',
+        'forms[31]': 'gira_reports',
+        'forms[32]': 'ror',
+        'forms[33]': 'postror_child',
+        'forms[34]': 'postror_adult',
+        'forms[35]': 'adult_fhh_rescue',
+        'forms[36]': 'pediatric_fhh_rescue',
         'rawOrLabel': 'raw',
         'rawOrLabelHeaders': 'raw',
         'exportCheckboxLabel': 'false',
@@ -249,6 +254,7 @@ if (record_count < 1):
     quit()
 
 # %%
+# save contents of the export to a dataframe AND a string - used multiple times throughout script
 def save_r4_export(export):
     R4_fullexport_string = r4_pull_r.content.decode("utf-8")
     R4_fullexport_dict = json.loads(R4_fullexport_string)
@@ -258,6 +264,7 @@ def save_r4_export(export):
 
 R4_fullexport_df = save_r4_export(r4_pull_r)
 R4_edited_string = R4_fullexport_df.to_json(orient='records')
+# occasionally when running the script MANUALLY, the size of the payload exceeded REDCap API size limits, so the below code breaks it up into chunks - each chunk needs to be imported separately
 #R4_split_df1 = R4_fullexport_df.loc[0:800]
 #R4_split_df2 = R4_fullexport_df.loc[801:1600]
 #R4_split_df3 = R4_fullexport_df.loc[1601:2400]
@@ -284,21 +291,26 @@ def identify_files(all_data):
 filtered_files_eav = identify_files(R4_fullexport_df)
 
 def get_gira_export_fields():
+    # defines what fields contain relevant dates for the GIRA
     gira_date_list = ['record_id', 'gira_pdf','date_gira_disclosed', 'date_gira_generated' ]
     gira_date_df = R4_fullexport_df[gira_date_list]
+    # narrowing down the dataframe so there aren't any empty fields
     concat_gira = gira_date_df.groupby('record_id').agg({'date_gira_generated':'last', 'date_gira_disclosed':'first', 'gira_pdf': 'last'}).reset_index()
     concat_gira = concat_gira[concat_gira.date_gira_generated != '']
     concat_gira['date_gira_generated'] = pandas.to_datetime(concat_gira['date_gira_generated'])
-    #concat_gira['date_gira_generated'] = pandas.to_datetime(concat_gira['date_gira_generated']).dt.date
+    # calculate the difference between the current date and the date the GIRA was generated
     concat_gira['Difference'] = (datetime.today() - concat_gira['date_gira_generated'])
     concat_gira["Difference"] = (concat_gira["Difference"]).dt.days
+    # only keep GIRAs that were generated more than 28 days ago OR have already been discussed with participants
     gira_uploads = concat_gira[((concat_gira['Difference'] >= 28) & (concat_gira['date_gira_disclosed'] == '')) | (concat_gira['date_gira_disclosed'] >= last_time)]
     return gira_uploads
 
 
 gira_uploads = get_gira_export_fields()
 gira_eav = pandas.melt(gira_uploads, id_vars=['record_id'], var_name='field', value_name='file_name')
+# getting rid of empty fields
 gira_eav = gira_eav.loc[(gira_eav['field'] == 'gira_pdf')]
+# converting to a list of GIRA files to export
 gira_files_list = gira_eav.values.tolist()
 
 ### separate into consent files and non-consent files
@@ -317,8 +329,6 @@ def export_consent_files(filtered_files_eav):
     him_consent_join = pandas.merge(him_filtered, consent_files, on='record_id')
     ### remove whitespace and special characters from participant names
     him_consent_join['name_of_participant_part1'] = him_consent_join['name_of_participant_part1'].str.replace('\W', '')
-    #him_lasttime = pandas.to_datetime(last_time)
-    #him_lasttime = him_lasttime.replace(hour=0, minute=0, second=0)
     him_consent_join['date_consent_cchmc_pp_2'] = pandas.to_datetime(him_consent_join['date_consent_cchmc_pp_2'])
     him_consent_join['date_p2_consent_cchmc'] = pandas.to_datetime(him_consent_join['date_p2_consent_cchmc'])
     him_consent_join = him_consent_join.loc[(him_consent_join['date_consent_cchmc_pp_2'] >= new_lasttime) | (
@@ -379,7 +389,6 @@ def rename_consent_files(him_consent_join):
         him_ids_list.append(record_id)
 
     him_newnames_df = pandas.DataFrame({'record_id': him_ids_list, 'newname': him_newnames_list})
-    # him_consent_join = him_consent_join.reset_index(drop=True)
     him_consent_join2 = pandas.merge(him_consent_join, him_newnames_df, on='record_id', how='outer')
     him_consent_list = him_consent_join2.values.tolist()
 
@@ -594,12 +603,7 @@ def cchmc_field_import(data_import):
 cchmc_field_import(R4_edited_string)
 
 
-# import required packages
-from fhirclient import client
-from fhirclient.models import bundle, documentreference, domainresource, encounter, organization, patient, practitioner, reference, resource, observation
-from urllib import request, parse
 # define function for referencing a different resource
-
 def to_reference(res):
     ref_type = res['resourceType']
     ref_id = res['id']
@@ -746,8 +750,8 @@ def create_gira_message(gira_message_list):
             "content": [{
                 "attachment": {
                     "contentType": "application/pdf",
-                    "data": 'test message',
-                    #data": base64_message,
+                    #"data": 'test message',
+                    "data": base64_message,
                     "title": "Genome Informed Risk Assessment"
                 }
             }],

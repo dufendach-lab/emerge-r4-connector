@@ -1,6 +1,7 @@
 /config/api_config.py
 __pycache__
 /data
+/gira_files
 run_history.log
 /config/keys_config.cfg
 .ipynb_checkpoints
