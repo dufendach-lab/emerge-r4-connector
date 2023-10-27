@@ -803,3 +803,6 @@ create_gira_message(gira_message_list)
 
 
 write_file('run_history.log', new_runtime)
+
+for pdf in os.listdir(GIRA_DIR):
+    os.remove(os.path.join(GIRA_DIR, pdf))
