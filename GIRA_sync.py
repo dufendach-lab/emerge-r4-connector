@@ -419,15 +419,14 @@ def create_gira_message(gira_message_list):
                      }
                 ]
         }
-        #print(message_json)
+        payload = json.dumps(message_json)
+        # print(payload)
         headers = {
-           'Content-Type': 'application/json'
+            'Content-Type': 'application/json'
         }
         url = "https://interfaceuat:40010/fhir/"
-        payload = message_json
         r = requests.post(url, headers=headers, data=payload,
                           verify='/Users/casjk8/Downloads/emerge.mirth.fhir.hl7.cer', auth=('eMerge', 'eMerge'))
-        print(r.text)
-
+        print('HTTP Status: ' + str(r.status_code))
 
 create_gira_message(gira_message_list)
